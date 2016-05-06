@@ -125,7 +125,7 @@ var prevExecutionExceptionObjLst = [];
 
 // Hannah: For some reason, commenting this out makes it so you have to click
 // Visualize Execution multiple times (but only sometimes...)
-var loggingSocketIO = undefined; // socket.io instance -- OPTIONAL: not all frontends use it
+// var loggingSocketIO = undefined; // socket.io instance -- OPTIONAL: not all frontends use it
 
 // From http://stackoverflow.com/a/8809472
 // Hannah: generates "Globally/Universally Unique identifiers"
@@ -209,22 +209,22 @@ function initAceEditor(height) {
   // don't do real-time syntax checks:
   // https://github.com/ajaxorg/ace/wiki/Syntax-validation
   // s.setOption("useWorker", false);
-  s.setOption("useWorker", true); //Hannah did this
+  s.setOption("useWorker", true); //Hannah did this; DO do real-time syntax checks
 
   setAceMode();
 
   pyInputAceEditor.focus();
 }
 
-var JAVA_BLANK_TEMPLATE = 'public class YourClassNameHere {\n\
-    public static void main(String[] args) {\n\
-\n\
-    }\n\
-}'
+// var JAVA_BLANK_TEMPLATE = 'public class YourClassNameHere {\n\
+//     public static void main(String[] args) {\n\
+// \n\
+//     }\n\
+// }'
 
 function setAceMode() {
   var selectorVal = $('#pythonVersionSelector').val();
-  var mod;
+  var mod = 'javascript'; //Hannah changed 5/6/16
   var tabSize = 2;
   // if (selectorVal === 'java') {
   //   mod = 'java';
@@ -233,13 +233,13 @@ function setAceMode() {
   //     pyInputSetValue(JAVA_BLANK_TEMPLATE);
   //   }
   // } else 
-  if (selectorVal === 'js') {
-    mod = 'javascript';
+  // if (selectorVal === 'js') {
+    // mod = 'javascript';
     // if it's just a Java skeleton, then reset to blank:
-    if (pyInputAceEditor.getValue() === JAVA_BLANK_TEMPLATE) {
-      pyInputSetValue('');
-    }
-  } 
+    // if (pyInputAceEditor.getValue() === JAVA_BLANK_TEMPLATE) {
+    //   pyInputSetValue('');
+    // }
+  // } 
   // else if (selectorVal === 'ts') {
   //   mod = 'typescript';
   //   // if it's just a Java skeleton, then reset to blank:
@@ -281,8 +281,8 @@ function snapshotCodeDiff() {
   var newCode = pyInputAceEditor.getValue();
   var timestamp = new Date().getTime();
 
-  //console.log('Orig:', curCode);
-  //console.log('New:', newCode);
+  console.log('Orig:', curCode);
+  console.log('New:', newCode);
   if (curCode != newCode) {
     var diff = dmp.diff_toDelta(dmp.diff_main(curCode, newCode));
     //var patch = dmp.patch_toText(dmp.patch_make(curCode, newCode));
@@ -765,16 +765,22 @@ function supports_html5_storage() {
 }
 
 // abstraction so that we can use either CodeMirror or Ace as our code editor
-function pyInputGetValue() {
-  // if (useCodeMirror) {
-  //   return pyInputCodeMirror.getValue();
-  // }
-  // else {
-  //   return pyInputAceEditor.getValue();
-  // }
-  return pyInputAceEditor.getValue(); // Hannah changed 5/6/16
+// Hannah: FOR SOME REASON, commenting this out breaks the Visualize Execution button
+// even though I changed it so it never gets called......gahhh
+// function pyInputGetValue() {
+//   // Hannah changed 5/6/16
 
-}
+//   // if (useCodeMirror) {
+//   //   return pyInputCodeMirror.getValue();
+//   // }
+//   // else {
+//   //   return pyInputAceEditor.getValue();
+//   // }
+
+//   // Hannah: commenting THIS line out makes it so visualizer just says 'undefined'
+//   return pyInputAceEditor.getValue(); 
+
+// }
 
 function pyInputSetValue(dat) {
   if (useCodeMirror) {
@@ -1750,28 +1756,28 @@ function getSurveyObject() {
 // }
 
 
-// using socket.io:
-function logEvent(obj) {
-  //console.log(obj);
-  if (loggingSocketIO) {
-    if (supports_html5_storage()) {
-      obj.user_uuid = localStorage.getItem('opt_uuid');
-    }
-    // this probably won't match the server time due to time zones, etc.
-    obj.clientTime = new Date().getTime();
+// // using socket.io:
+// function logEvent(obj) {
+//   //console.log(obj);
+//   if (loggingSocketIO) {
+//     if (supports_html5_storage()) {
+//       obj.user_uuid = localStorage.getItem('opt_uuid');
+//     }
+//     // this probably won't match the server time due to time zones, etc.
+//     obj.clientTime = new Date().getTime();
 
-    if (loggingSocketIO.connected) {
-      loggingSocketIO.emit('opt-client-event', obj);
-      //console.log('emitted opt-client-event:', obj);
-    } else {
-      // TODO: be careful about this getting HUGE if loggingSocketIO
-      // never connects properly ...
-      logEventQueue.push(obj); // queue this up to be logged when the client
-                               // finishes successfully connecting to the server
+//     if (loggingSocketIO.connected) {
+//       loggingSocketIO.emit('opt-client-event', obj);
+//       //console.log('emitted opt-client-event:', obj);
+//     } else {
+//       // TODO: be careful about this getting HUGE if loggingSocketIO
+//       // never connects properly ...
+//       logEventQueue.push(obj); // queue this up to be logged when the client
+//                                // finishes successfully connecting to the server
 
-      // we're not yet connected, or we've been disconnected by the
-      // server, so try to connect/reconnect first before emitting the event
-      loggingSocketIO.connect(); // will trigger the .on('connect', ...) handler
-    }
-  }
-}
+//       // we're not yet connected, or we've been disconnected by the
+//       // server, so try to connect/reconnect first before emitting the event
+//       loggingSocketIO.connect(); // will trigger the .on('connect', ...) handler
+//     }
+//   }
+// }
