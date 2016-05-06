@@ -215,413 +215,8 @@ function snapshotCodeDiff() {
     deltaObj.deltas.push(delta);
 
     curCode = newCode;
-    // logEvent({type: 'editCode', delta: delta});
-
-    // if (typeof TogetherJS !== 'undefined' && TogetherJS.running) {
-    //   TogetherJS.send({type: "editCode", delta: delta});
-    // }
   }
 }
-
-// function reconstructCode() {
-//   var cur = '';
-
-//   var dmp = new diff_match_patch();
-//   var deltas = [];
-//   var patches = [];
-
-//   var prevTimestamp = undefined;
-//   $.each(deltaObj.deltas, function(i, e) {
-//     if (prevTimestamp) {
-//       assert(e.t >= prevTimestamp);
-//       prevTimestamp = e.t;
-//     }
-//     deltas.push(e.d);
-//     patches.push(e.p);
-//   });
-
-//   console.log(patches);
-//   console.log(deltas);
-
-//   //var d = dmp.diff_fromDelta('', "+x = 1")
-//   //var p = dmp.patch_make(d)
-//   //dmp.patch_apply(p, '')
-
-//   //x = dmp.patch_fromText("@@ -0,0 +1,5 @@\n+x = 1\n")
-//   //dmp.patch_apply(x, '')
-//   //x = dmp.patch_fromText("@@ -1,5 +1,12 @@\n x = 1\n+%0Ax = 2%0A\n")
-//   //dmp.patch_apply(x, 'x = 1')
-// }
-
-
-// BEGIN - shared session stuff
-
-// grab this as early as possible before TogetherJS munges the URL
-var togetherjsInUrl = ($.bbq.getState('togetherjs') !== undefined);
-
-// // XXX: to deploy, substitute in the online TogetherJS server URL here
-// var TogetherJSConfig_hubBase = "http://localhost:30035/"; // local
-
-// // TogetherJS common configuration
-// var TogetherJSConfig_disableWebRTC = true;
-// var TogetherJSConfig_suppressJoinConfirmation = true;
-// var TogetherJSConfig_dontShowClicks = false;
-
-// // stop popping up boring intro dialog box:
-// var TogetherJSConfig_seenIntroDialog = true;
-
-// // suppress annoying pop-ups:
-// var TogetherJSConfig_suppressInvite = true;
-// var TogetherJSConfig_suppressJoinConfirmation = true;
-
-// // clone clicks ONLY in certain elements to keep things simple:
-// var TogetherJSConfig_cloneClicks = '#pyInputPane select';
-
-// var TogetherJSConfig_siteName = "Online Python Tutor shared session";
-// var TogetherJSConfig_toolName = "Online Python Tutor shared session";
-
-// // more nasty global state vars
-// var updateOutputSignalFromRemote = false;
-// var executeCodeSignalFromRemote = false;
-// var togetherjsSyncRequested = false;
-// var pendingCodeOutputScrollTop = null;
-
-// TogetherJSConfig_ignoreForms = ['.togetherjsIgnore']; // do NOT sync these elements
-
-
-// function requestSync() {
-//   if (TogetherJS.running) {
-//     togetherjsSyncRequested = true;
-//     TogetherJS.send({type: "requestSync"});
-//   }
-// }
-
-// function syncAppState(appState) {
-//   setToggleOptions(appState);
-
-//   // VERY VERY subtle -- temporarily prevent TogetherJS from sending
-//   // form update events while we set the input value. otherwise
-//   // this will send an incorrect delta to the other end and screw things
-//   // up because the initial states of the two forms aren't equal.
-//   var orig = TogetherJS.config.get('ignoreForms');
-//   TogetherJS.config('ignoreForms', true);
-//   pyInputSetValue(appState.code);
-//   TogetherJS.config('ignoreForms', orig);
-
-//   if (appState.rawInputLst) {
-//     rawInputLst = $.parseJSON(appState.rawInputLstJSON);
-//   }
-//   else {
-//     rawInputLst = [];
-//   }
-// }
-
-
-// get OPT ready for integration with TogetherJS
-// function initTogetherJS() {
-//   if (togetherjsInUrl) {
-//     $("#ssDiv").hide(); // hide ASAP!
-//     $("#togetherjsStatus").html("Please wait ... loading shared session");
-//   }
-
-
-//   // clear your name from the cache every time to prevent privacy leaks
-//   if (supports_html5_storage()) {
-//     localStorage.removeItem('togetherjs.settings.name');
-//   }
-
-
-//   // This event triggers when you first join a session and say 'hello',
-//   // and then one of your peers says hello back to you. If they have the
-//   // exact same name as you, then change your own name to avoid ambiguity.
-//   // Remember, they were here first (that's why they're saying 'hello-back'),
-//   // so they keep their own name, but you need to change yours :)
-//   TogetherJS.hub.on("togetherjs.hello-back", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     var p = TogetherJS.require("peers");
-
-//     var peerNames = p.getAllPeers().map(function(e) {return e.name});
-
-//     if (msg.name == p.Self.name) {
-//       var newName = undefined;
-//       var toks = msg.name.split(' ');
-//       var count = Number(toks[1]);
-
-//       // make sure the name is truly unique, incrementing count as necessary
-//       do {
-//         if (!isNaN(count)) {
-//           newName = toks[0] + ' ' + String(count + 1); // e.g., "Tutor 3"
-//           count++;
-//         }
-//         else {
-//           // the original name was something like "Tutor", so make
-//           // newName into, say, "Tutor 2"
-//           newName = p.Self.name + ' 2';
-//           count = 2;
-//         }
-//       } while ($.inArray(newName, peerNames) >= 0); // i.e., is newName in peerNames?
-
-//       p.Self.update({name: newName}); // change our own name
-//     }
-//   });
-
-//   TogetherJS.hub.on("updateOutput", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     if (isExecutingCode) {
-//       return;
-//     }
-
-//     if (myVisualizer) {
-//       // to prevent this call to updateOutput from firing its own TogetherJS event
-//       updateOutputSignalFromRemote = true;
-//       try {
-//         myVisualizer.renderStep(msg.step);
-//       }
-//       finally {
-//         updateOutputSignalFromRemote = false;
-//       }
-//     }
-//   });
-
-//   TogetherJS.hub.on("executeCode", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     if (isExecutingCode) {
-//       return;
-//     }
-
-//     executeCodeSignalFromRemote = true;
-//     try {
-//       executeCode(msg.forceStartingInstr, msg.rawInputLst);
-//     }
-//     finally {
-//       executeCodeSignalFromRemote = false;
-//     }
-
-//   });
-
-//   TogetherJS.hub.on("hashchange", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     if (isExecutingCode) {
-//       return;
-//     }
-
-//     console.log("TogetherJS RECEIVE hashchange", msg.appMode);
-//     if (msg.appMode != appMode) {
-//       updateAppDisplay(msg.appMode);
-
-//       if (appMode == 'edit' && msg.codeInputScrollTop !== undefined &&
-//           pyInputGetScrollTop() != msg.codeInputScrollTop) {
-//         // hack: give it a bit of time to settle first ...
-//         $.doTimeout('pyInputCodeMirrorInit', 200, function() {
-//           pyInputSetScrollTop(msg.codeInputScrollTop);
-//         });
-//       }
-//     }
-//   });
-
-//   TogetherJS.hub.on("codemirror-edit", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-//     $("#codeInputWarnings").hide();
-//     $("#someoneIsTypingDiv").show();
-
-//     $.doTimeout('codeMirrorWarningTimeout', 1000, function() { // debounce
-//       $("#codeInputWarnings").show();
-//       $("#someoneIsTypingDiv").hide();
-//     });
-//   });
-
-//   TogetherJS.hub.on("requestSync", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     if (TogetherJS.running) {
-//       TogetherJS.send({type: "myAppState",
-//                        myAppState: getAppState(),
-//                        codeInputScrollTop: pyInputGetScrollTop(),
-//                        pyCodeOutputDivScrollTop: myVisualizer ?
-//                                                  myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop() :
-//                                                  undefined});
-//     }
-//   });
-
-//   TogetherJS.hub.on("myAppState", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     // if we didn't explicitly request a sync, then don't do anything
-//     if (!togetherjsSyncRequested) {
-//       return;
-//     }
-
-//     togetherjsSyncRequested = false;
-
-//     var learnerAppState = msg.myAppState;
-
-//     if (learnerAppState.mode == 'display') {
-//       if (appStateEq(getAppState(), learnerAppState)) {
-//         // update curInstr only
-//         console.log("on:myAppState - app states equal, renderStep", learnerAppState.curInstr);
-//         myVisualizer.renderStep(learnerAppState.curInstr);
-
-//         if (msg.pyCodeOutputDivScrollTop !== undefined) {
-//           myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(msg.pyCodeOutputDivScrollTop);
-//         }
-//       }
-//       else if (!isExecutingCode) { // if already executing from a prior signal, ignore
-//         console.log("on:myAppState - app states unequal, executing", learnerAppState);
-//         syncAppState(learnerAppState);
-
-//         executeCodeSignalFromRemote = true;
-//         try {
-//           if (msg.pyCodeOutputDivScrollTop !== undefined) {
-//             pendingCodeOutputScrollTop = msg.pyCodeOutputDivScrollTop; // NASTY global
-//           }
-//           executeCode(learnerAppState.curInstr);
-//         }
-//         finally {
-//           executeCodeSignalFromRemote = false;
-//         }
-//       }
-//     }
-//     else {
-//       assert(learnerAppState.mode == 'edit');
-//       if (!appStateEq(getAppState(), learnerAppState)) {
-//         console.log("on:myAppState - edit mode sync");
-//         syncAppState(learnerAppState);
-//         enterEditMode();
-//       }
-//     }
-
-//     if (msg.codeInputScrollTop !== undefined) {
-//       // give pyInputCodeMirror/pyInputAceEditor a bit of time to settle with
-//       // its new value. this is hacky; ideally we have a callback function for
-//       // when setValue() completes.
-//       $.doTimeout('pyInputCodeMirrorInit', 200, function() {
-//         pyInputSetScrollTop(msg.codeInputScrollTop);
-//       });
-//     }
-//   });
-
-//   TogetherJS.hub.on("syncAppState", function(msg) {
-//     syncAppState(msg.myAppState);
-//   });
-
-//   TogetherJS.hub.on("codeInputScroll", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-//     if (useCodeMirror) {
-//       pyInputSetScrollTop(msg.scrollTop);
-//     }
-//     else {
-//       // don't sync for Ace since I can't get it working properly yet
-//     }
-//   });
-
-//   TogetherJS.hub.on("pyCodeOutputDivScroll", function(msg) {
-//     // do NOT use a msg.sameUrl guard since that will miss some signals
-//     // due to our funky URLs
-
-//     if (myVisualizer) {
-//       myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(msg.scrollTop);
-//     }
-//   });
-
-//   // $("#sharedSessionBtn").click(startSharedSession);
-//   $("#stopTogetherJSBtn").click(TogetherJS); // toggles off
-
-//   // fired when TogetherJS is activated. might fire on page load if there's
-//   // already an open session from a prior page load in the recent past.
-//   TogetherJS.on("ready", function () {
-//     console.log("TogetherJS ready");
-
-//     $("#sharedSessionDisplayDiv").show();
-//     $("#adInfo").hide();
-//     $("#ssDiv").hide();
-//     $("#adHeader").hide();
-
-//     // send this to the server for the purposes of logging, but other
-//     // clients shouldn't do anything with this data
-//     if (TogetherJS.running) {
-//       TogetherJS.send({type: "initialAppState",
-//                        myAppState: getAppState(),
-//                        user_uuid: supports_html5_storage() ? localStorage.getItem('opt_uuid') : undefined,
-//                        // so that you can tell whether someone else
-//                        // shared a TogetherJS URL with you to invite you
-//                        // into this shared session:
-//                        togetherjsInUrl: togetherjsInUrl});
-//     }
-
-//     requestSync(); // immediately try to sync upon startup so that if
-//                    // others are already in the session, we will be
-//                    // synced up. and if nobody is here, then this is a NOP.
-
-//     TogetherjsReadyHandler(); // needs to be defined in each frontend
-//     redrawConnectors(); // update all arrows at the end
-//   });
-
-//   // emitted when TogetherJS is closed. This is not emitted when the
-//   // webpage simply closes or navigates elsewhere, ONLY when TogetherJS
-//   // is explicitly stopped via a call to TogetherJS()
-//   TogetherJS.on("close", function () {
-//     console.log("TogetherJS close");
-
-//     $("#togetherjsStatus").html(''); // clear it
-//     $("#sharedSessionDisplayDiv").hide();
-//     $("#adInfo").show();
-//     $("#ssDiv").show();
-//     $("#adHeader").show();
-
-//     TogetherjsCloseHandler(); // needs to be defined in each frontend
-//     redrawConnectors(); // update all arrows at the end
-//   });
-// }
-
-// function TogetherjsReadyHandler() {
-//   alert("ERROR: need to override TogetherjsReadyHandler()");
-// }
-
-// function TogetherjsCloseHandler() {
-//   alert("ERROR: need to override TogetherjsCloseHandler()");
-// }
-
-// function startSharedSession() {
-//   $("#ssDiv").hide(); // hide ASAP!
-//   $("#togetherjsStatus").html("Please wait ... loading shared session");
-//   TogetherJS();
-// }
-
-// function populateTogetherJsShareUrl() {
-//   // without anything after the '#' in the hash
-//   var cleanUrl = $.param.fragment(location.href, {}, 2 /* override */);
-//   var urlToShare = cleanUrl + 'togetherjs=' + TogetherJS.shareId();
-//   $("#togetherjsStatus").html('<div>\
-//                                Send the URL below to invite someone to join this shared session:\
-//                                </div>\
-//                                <input type="text" style="font-size: 10pt; \
-//                                font-weight: bold; padding: 4px;\
-//                                margin-top: 3pt; \
-//                                margin-bottom: 6pt;" \
-//                                id="togetherjsURL" size="80" readonly="readonly"/>\
-//                                <button id="syncBtn" type="button">Force sync</button>\
-//                                ');
-//   $("#togetherjsURL").val(urlToShare).attr('size', urlToShare.length + 20);
-//   $("#syncBtn").click(requestSync);
-
-//   // deployed on 2015-03-06
-//   // $("#togetherjsStatus").append(emailNotificationHtml);
-// }
-
-// END - shared session stuff
-
 
 var myVisualizer = null; // singleton ExecutionVisualizer instance
 
@@ -660,69 +255,23 @@ function supports_html5_storage() {
   }
 }
 
-// abstraction so that we can use either CodeMirror or Ace as our code editor
-// Hannah: FOR SOME REASON, commenting this out breaks the Visualize Execution button
-// even though I changed it so it never gets called......gahhh
-// function pyInputGetValue() {
-//   // Hannah changed 5/6/16
-
-//   // if (useCodeMirror) {
-//   //   return pyInputCodeMirror.getValue();
-//   // }
-//   // else {
-//   //   return pyInputAceEditor.getValue();
-//   // }
-
-//   // Hannah: commenting THIS line out makes it so visualizer just says 'undefined'
-//   return pyInputAceEditor.getValue(); 
-
-// }
-
 function pyInputSetValue(dat) {
-  if (useCodeMirror) {
-    pyInputCodeMirror.setValue(dat.rtrim() /* kill trailing spaces */);
-  }
-  else {
     pyInputAceEditor.setValue(dat.rtrim() /* kill trailing spaces */,
                               -1 /* do NOT select after setting text */);
-  }
+  // }
 
   $('#urlOutput,#embedCodeOutput').val('');
 
   clearFrontendError();
 
   // also scroll to top to make the UI more usable on smaller monitors
-  $(document).scrollTop(0);
+  // $(document).scrollTop(0);
 }
-
-
-var codeMirrorScroller = '#codeInputPane .CodeMirror-scroll';
-
-function pyInputGetScrollTop() {
-  if (useCodeMirror) {
-    return $(codeMirrorScroller).scrollTop();
-  }
-  else {
-    return pyInputAceEditor.getSession().getScrollTop();
-  }
-}
-
-function pyInputSetScrollTop(st) {
-  if (useCodeMirror) {
-    $(codeMirrorScroller).scrollTop(st);
-  }
-  else {
-    pyInputAceEditor.getSession().setScrollTop(st);
-  }
-}
-
 
 var num414Tries = 0; // hacky global
 
 // run at the END so that everything else can be initialized first
 function genericOptFrontendReady() {
-  // initTogetherJS(); // initialize early
-
 
   // be friendly to the browser's forward and back buttons
   // thanks to http://benalman.com/projects/jquery-bbq-plugin/
@@ -737,13 +286,6 @@ function genericOptFrontendReady() {
       var newMode = $.bbq.getState('mode');
       //console.log('hashchange:', newMode, window.location.hash);
       updateAppDisplay(newMode);
-    }
-
-    if (TogetherJS.running && !isExecutingCode) {
-      TogetherJS.send({type: "hashchange",
-                       appMode: appMode,
-                       codeInputScrollTop: pyInputGetScrollTop(),
-                       myAppState: getAppState()});
     }
   });
 
@@ -785,41 +327,6 @@ function genericOptFrontendReady() {
       }
     });
   }
-
-
-  if (useCodeMirror) {
-    $(codeMirrorScroller).scroll(function(e) {
-      if (TogetherJS.running) {
-        var elt = $(this);
-        $.doTimeout('codeInputScroll', 100, function() { // debounce
-          // note that this will send a signal back and forth both ways
-          // (there's no easy way to prevent this), but it shouldn't keep
-          // bouncing back and forth indefinitely since no the second signal
-          // causes no additional scrolling
-          TogetherJS.send({type: "codeInputScroll",
-                           scrollTop: elt.scrollTop()});
-        });
-      }
-    });
-  }
-  else {
-    // don't sync for Ace since I can't get it working properly yet
-    /*
-    pyInputAceEditor.getSession().on('changeScrollTop', function() {
-      if (TogetherJS.running) {
-        $.doTimeout('codeInputScroll', 100, function() { // debounce
-          // note that this will send a signal back and forth both ways
-          // (there's no easy way to prevent this), but it shouldn't keep
-          // bouncing back and forth indefinitely since no the second signal
-          // causes no additional scrolling
-          TogetherJS.send({type: "codeInputScroll",
-                           scrollTop: pyInputGetScrollTop()});
-        });
-      }
-    });
-    */
-  }
-
 
   // first initialize options from HTML LocalStorage. very important
   // that this code runs first so that options get overridden by query
@@ -1165,10 +672,10 @@ function updateAppDisplay(newAppMode) {
 
 
     // NASTY global :(
-    if (pendingCodeOutputScrollTop) {
-      myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(pendingCodeOutputScrollTop);
-      pendingCodeOutputScrollTop = null;
-    }
+    // if (pendingCodeOutputScrollTop) {
+    //   myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(pendingCodeOutputScrollTop);
+    //   pendingCodeOutputScrollTop = null;
+    // }
 
     $.doTimeout('pyCodeOutputDivScroll'); // cancel any prior scheduled calls
 
@@ -1361,9 +868,9 @@ function executeCodeAndCreateViz(codeToExec,
           myVisualizer = new ExecutionVisualizer(outputDiv, dataFromBackend, frontendOptionsObj);
 
           myVisualizer.add_pytutor_hook("end_updateOutput", function(args) {
-            if (updateOutputSignalFromRemote) {
-              return;
-            }
+            // if (updateOutputSignalFromRemote) {
+            //   return;
+            // }
             if (typeof TogetherJS !== 'undefined' && TogetherJS.running && !isExecutingCode) {
               TogetherJS.send({type: "updateOutput", step: args.myViz.curInstr});
             }
