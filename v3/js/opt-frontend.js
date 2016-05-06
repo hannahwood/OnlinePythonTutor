@@ -710,14 +710,14 @@ $(document).ready(function() {
 
       // very subtle! for TogetherJS to sync #pythonVersionSelector
       // properly, we must manually send a sync request event:
-      if (TogetherJS && TogetherJS.running) {
-        TogetherJS.send({type: "syncAppState",
-                         myAppState: getAppState(),
-                         codeInputScrollTop: pyInputGetScrollTop(),
-                         pyCodeOutputDivScrollTop: myVisualizer ?
-                                                   myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop() :
-                                                   undefined});
-      }
+      // if (TogetherJS && TogetherJS.running) {
+      //   TogetherJS.send({type: "syncAppState",
+      //                    myAppState: getAppState(),
+      //                    codeInputScrollTop: pyInputGetScrollTop(),
+      //                    pyCodeOutputDivScrollTop: myVisualizer ?
+      //                                              myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop() :
+      //                                              undefined});
+      // }
 
     }, 'text' /* data type - set to text or else jQuery tries to EXECUTE the JS example code! */);
     return false; // prevent 'a' click from going to an actual link

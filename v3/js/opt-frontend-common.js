@@ -49,57 +49,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // var python2_backend_script = 'exec';
 // var python3_backend_script = 'exec';
 
-// KRAZY experimental KODE!!! Use a custom hacked CPython interpreter
-// var python2crazy_backend_script = 'web_exec_py2-crazy.py';
-// On Google App Engine, simply run dev_appserver.py with the
-// crazy custom py2crazy CPython interpreter to get 2crazy mode
-//var python2crazy_backend_script = 'exec';
-
 // empty dummy just to do logging on the Apache's server
 var js_backend_script = 'web_exec_js.py';
-// var ts_backend_script = 'web_exec_ts.py';
-// var java_backend_script = 'web_exec_java.py';
-// var ruby_backend_script = 'web_exec_ruby.py';
 
 // this is customized to my own Linode server:
 // these are the REAL endpoints, accessed via jsonp. code is in ../../v4-cokapi/
 if (window.location.protocol === 'https:') {
   // my certificate for https is registered via cokapi.com, so use it for now:
   var JS_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_js_jsonp';
-  // var TS_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_ts_jsonp';
-  // var JAVA_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_java_jsonp';
-  // var RUBY_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_ruby_jsonp';
 } 
 else {
   var JS_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_js_jsonp'; // for deployment
-  // var TS_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_ts_jsonp'; // for deployment
-  // var JAVA_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_java_jsonp'; // for deployment
-  // var RUBY_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_ruby_jsonp'; // for deployment
 }
 
-
-// function langToBackendScript(lang) {
-//   var backend_script = null;
-//   if (lang == '2') {
-//       backend_script = python2_backend_script;
-//   } else if (lang == '3') {
-//       backend_script = python3_backend_script;
-//   } else if (lang == '2crazy') {
-//       backend_script = python2crazy_backend_script;
-//   } else if (lang == 'js') {
-//       backend_script = js_backend_script;
-//   } else if (lang == 'ts') {
-//       backend_script = ts_backend_script;
-//   } else if (lang == 'ruby') {
-//       backend_script = ruby_backend_script;
-//   } else if (lang == 'java') {
-//       backend_script = java_backend_script;
-//   }
-//   assert(backend_script);
-//   return backend_script;
-// }
-
-// Hannah replaced above function with this (5/5/16):
+// Hannah replaced other function with this (5/5/16):
 function langToBackendScript(lang) {
   return js_backend_script;
 }
@@ -216,50 +179,11 @@ function initAceEditor(height) {
   pyInputAceEditor.focus();
 }
 
-// var JAVA_BLANK_TEMPLATE = 'public class YourClassNameHere {\n\
-//     public static void main(String[] args) {\n\
-// \n\
-//     }\n\
-// }'
-
 function setAceMode() {
   var selectorVal = $('#pythonVersionSelector').val();
   var mod = 'javascript'; //Hannah changed 5/6/16
   var tabSize = 2;
-  // if (selectorVal === 'java') {
-  //   mod = 'java';
-  //   // if blank empty, then initialize to a Java skeleton:
-  //   if ($.trim(pyInputGetValue()) === '') {
-  //     pyInputSetValue(JAVA_BLANK_TEMPLATE);
-  //   }
-  // } else 
-  // if (selectorVal === 'js') {
-    // mod = 'javascript';
-    // if it's just a Java skeleton, then reset to blank:
-    // if (pyInputAceEditor.getValue() === JAVA_BLANK_TEMPLATE) {
-    //   pyInputSetValue('');
-    // }
-  // } 
-  // else if (selectorVal === 'ts') {
-  //   mod = 'typescript';
-  //   // if it's just a Java skeleton, then reset to blank:
-  //   if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
-  //     pyInputSetValue('');
-  //   }
-  // } else if (selectorVal === 'ruby') {
-  //   mod = 'ruby';
-  //   // if it's just a Java skeleton, then reset to blank:
-  //   if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
-  //     pyInputSetValue('');
-  //   }
-  // } else {
-  //   mod = 'python';
-  //   tabSize = 4; // PEP8
-  //   // if it's just a Java skeleton, then reset to blank:
-  //   if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
-  //     pyInputSetValue('');
-  //   }
-  // }
+
   assert(mod);
 
   var s = pyInputAceEditor.getSession();
@@ -281,52 +205,53 @@ function snapshotCodeDiff() {
   var newCode = pyInputAceEditor.getValue();
   var timestamp = new Date().getTime();
 
-  console.log('Orig:', curCode);
-  console.log('New:', newCode);
+  // console.log('Orig:', curCode);
+  // console.log('New:', newCode);
   if (curCode != newCode) {
+    // http://downloads.jahia.com/downloads/jahia/jahia6.6.1/jahia-root-6.6.1.0-aggregate-javadoc/name/fraser/neil/plaintext/DiffMatchPatch.html#diff_toDelta(java.util.LinkedList)
     var diff = dmp.diff_toDelta(dmp.diff_main(curCode, newCode));
     //var patch = dmp.patch_toText(dmp.patch_make(curCode, newCode));
     var delta = {t: timestamp, d: diff};
     deltaObj.deltas.push(delta);
 
     curCode = newCode;
-    logEvent({type: 'editCode', delta: delta});
+    // logEvent({type: 'editCode', delta: delta});
 
-    if (typeof TogetherJS !== 'undefined' && TogetherJS.running) {
-      TogetherJS.send({type: "editCode", delta: delta});
-    }
+    // if (typeof TogetherJS !== 'undefined' && TogetherJS.running) {
+    //   TogetherJS.send({type: "editCode", delta: delta});
+    // }
   }
 }
 
-function reconstructCode() {
-  var cur = '';
+// function reconstructCode() {
+//   var cur = '';
 
-  var dmp = new diff_match_patch();
-  var deltas = [];
-  var patches = [];
+//   var dmp = new diff_match_patch();
+//   var deltas = [];
+//   var patches = [];
 
-  var prevTimestamp = undefined;
-  $.each(deltaObj.deltas, function(i, e) {
-    if (prevTimestamp) {
-      assert(e.t >= prevTimestamp);
-      prevTimestamp = e.t;
-    }
-    deltas.push(e.d);
-    patches.push(e.p);
-  });
+//   var prevTimestamp = undefined;
+//   $.each(deltaObj.deltas, function(i, e) {
+//     if (prevTimestamp) {
+//       assert(e.t >= prevTimestamp);
+//       prevTimestamp = e.t;
+//     }
+//     deltas.push(e.d);
+//     patches.push(e.p);
+//   });
 
-  console.log(patches);
-  console.log(deltas);
+//   console.log(patches);
+//   console.log(deltas);
 
-  //var d = dmp.diff_fromDelta('', "+x = 1")
-  //var p = dmp.patch_make(d)
-  //dmp.patch_apply(p, '')
+//   //var d = dmp.diff_fromDelta('', "+x = 1")
+//   //var p = dmp.patch_make(d)
+//   //dmp.patch_apply(p, '')
 
-  //x = dmp.patch_fromText("@@ -0,0 +1,5 @@\n+x = 1\n")
-  //dmp.patch_apply(x, '')
-  //x = dmp.patch_fromText("@@ -1,5 +1,12 @@\n x = 1\n+%0Ax = 2%0A\n")
-  //dmp.patch_apply(x, 'x = 1')
-}
+//   //x = dmp.patch_fromText("@@ -0,0 +1,5 @@\n+x = 1\n")
+//   //dmp.patch_apply(x, '')
+//   //x = dmp.patch_fromText("@@ -1,5 +1,12 @@\n x = 1\n+%0Ax = 2%0A\n")
+//   //dmp.patch_apply(x, 'x = 1')
+// }
 
 
 // BEGIN - shared session stuff
@@ -334,395 +259,366 @@ function reconstructCode() {
 // grab this as early as possible before TogetherJS munges the URL
 var togetherjsInUrl = ($.bbq.getState('togetherjs') !== undefined);
 
-// XXX: to deploy, substitute in the online TogetherJS server URL here
-var TogetherJSConfig_hubBase = "http://localhost:30035/"; // local
+// // XXX: to deploy, substitute in the online TogetherJS server URL here
+// var TogetherJSConfig_hubBase = "http://localhost:30035/"; // local
 
-// TogetherJS common configuration
-var TogetherJSConfig_disableWebRTC = true;
-var TogetherJSConfig_suppressJoinConfirmation = true;
-var TogetherJSConfig_dontShowClicks = false;
+// // TogetherJS common configuration
+// var TogetherJSConfig_disableWebRTC = true;
+// var TogetherJSConfig_suppressJoinConfirmation = true;
+// var TogetherJSConfig_dontShowClicks = false;
 
-// stop popping up boring intro dialog box:
-var TogetherJSConfig_seenIntroDialog = true;
+// // stop popping up boring intro dialog box:
+// var TogetherJSConfig_seenIntroDialog = true;
 
-// suppress annoying pop-ups:
-var TogetherJSConfig_suppressInvite = true;
-var TogetherJSConfig_suppressJoinConfirmation = true;
+// // suppress annoying pop-ups:
+// var TogetherJSConfig_suppressInvite = true;
+// var TogetherJSConfig_suppressJoinConfirmation = true;
 
-// clone clicks ONLY in certain elements to keep things simple:
-var TogetherJSConfig_cloneClicks = '#pyInputPane select';
+// // clone clicks ONLY in certain elements to keep things simple:
+// var TogetherJSConfig_cloneClicks = '#pyInputPane select';
 
-var TogetherJSConfig_siteName = "Online Python Tutor shared session";
-var TogetherJSConfig_toolName = "Online Python Tutor shared session";
+// var TogetherJSConfig_siteName = "Online Python Tutor shared session";
+// var TogetherJSConfig_toolName = "Online Python Tutor shared session";
 
-// more nasty global state vars
-var updateOutputSignalFromRemote = false;
-var executeCodeSignalFromRemote = false;
-var togetherjsSyncRequested = false;
-var pendingCodeOutputScrollTop = null;
+// // more nasty global state vars
+// var updateOutputSignalFromRemote = false;
+// var executeCodeSignalFromRemote = false;
+// var togetherjsSyncRequested = false;
+// var pendingCodeOutputScrollTop = null;
 
-TogetherJSConfig_ignoreForms = ['.togetherjsIgnore']; // do NOT sync these elements
+// TogetherJSConfig_ignoreForms = ['.togetherjsIgnore']; // do NOT sync these elements
 
 
-function requestSync() {
-  if (TogetherJS.running) {
-    togetherjsSyncRequested = true;
-    TogetherJS.send({type: "requestSync"});
-  }
-}
+// function requestSync() {
+//   if (TogetherJS.running) {
+//     togetherjsSyncRequested = true;
+//     TogetherJS.send({type: "requestSync"});
+//   }
+// }
 
-function syncAppState(appState) {
-  setToggleOptions(appState);
+// function syncAppState(appState) {
+//   setToggleOptions(appState);
 
-  // VERY VERY subtle -- temporarily prevent TogetherJS from sending
-  // form update events while we set the input value. otherwise
-  // this will send an incorrect delta to the other end and screw things
-  // up because the initial states of the two forms aren't equal.
-  var orig = TogetherJS.config.get('ignoreForms');
-  TogetherJS.config('ignoreForms', true);
-  pyInputSetValue(appState.code);
-  TogetherJS.config('ignoreForms', orig);
+//   // VERY VERY subtle -- temporarily prevent TogetherJS from sending
+//   // form update events while we set the input value. otherwise
+//   // this will send an incorrect delta to the other end and screw things
+//   // up because the initial states of the two forms aren't equal.
+//   var orig = TogetherJS.config.get('ignoreForms');
+//   TogetherJS.config('ignoreForms', true);
+//   pyInputSetValue(appState.code);
+//   TogetherJS.config('ignoreForms', orig);
 
-  if (appState.rawInputLst) {
-    rawInputLst = $.parseJSON(appState.rawInputLstJSON);
-  }
-  else {
-    rawInputLst = [];
-  }
-}
+//   if (appState.rawInputLst) {
+//     rawInputLst = $.parseJSON(appState.rawInputLstJSON);
+//   }
+//   else {
+//     rawInputLst = [];
+//   }
+// }
 
 
 // get OPT ready for integration with TogetherJS
-function initTogetherJS() {
-  if (togetherjsInUrl) {
-    $("#ssDiv").hide(); // hide ASAP!
-    $("#togetherjsStatus").html("Please wait ... loading shared session");
-  }
+// function initTogetherJS() {
+//   if (togetherjsInUrl) {
+//     $("#ssDiv").hide(); // hide ASAP!
+//     $("#togetherjsStatus").html("Please wait ... loading shared session");
+//   }
 
 
-  // clear your name from the cache every time to prevent privacy leaks
-  if (supports_html5_storage()) {
-    localStorage.removeItem('togetherjs.settings.name');
-  }
+//   // clear your name from the cache every time to prevent privacy leaks
+//   if (supports_html5_storage()) {
+//     localStorage.removeItem('togetherjs.settings.name');
+//   }
 
 
-  // This event triggers when you first join a session and say 'hello',
-  // and then one of your peers says hello back to you. If they have the
-  // exact same name as you, then change your own name to avoid ambiguity.
-  // Remember, they were here first (that's why they're saying 'hello-back'),
-  // so they keep their own name, but you need to change yours :)
-  TogetherJS.hub.on("togetherjs.hello-back", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   // This event triggers when you first join a session and say 'hello',
+//   // and then one of your peers says hello back to you. If they have the
+//   // exact same name as you, then change your own name to avoid ambiguity.
+//   // Remember, they were here first (that's why they're saying 'hello-back'),
+//   // so they keep their own name, but you need to change yours :)
+//   TogetherJS.hub.on("togetherjs.hello-back", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    var p = TogetherJS.require("peers");
+//     var p = TogetherJS.require("peers");
 
-    var peerNames = p.getAllPeers().map(function(e) {return e.name});
+//     var peerNames = p.getAllPeers().map(function(e) {return e.name});
 
-    if (msg.name == p.Self.name) {
-      var newName = undefined;
-      var toks = msg.name.split(' ');
-      var count = Number(toks[1]);
+//     if (msg.name == p.Self.name) {
+//       var newName = undefined;
+//       var toks = msg.name.split(' ');
+//       var count = Number(toks[1]);
 
-      // make sure the name is truly unique, incrementing count as necessary
-      do {
-        if (!isNaN(count)) {
-          newName = toks[0] + ' ' + String(count + 1); // e.g., "Tutor 3"
-          count++;
-        }
-        else {
-          // the original name was something like "Tutor", so make
-          // newName into, say, "Tutor 2"
-          newName = p.Self.name + ' 2';
-          count = 2;
-        }
-      } while ($.inArray(newName, peerNames) >= 0); // i.e., is newName in peerNames?
+//       // make sure the name is truly unique, incrementing count as necessary
+//       do {
+//         if (!isNaN(count)) {
+//           newName = toks[0] + ' ' + String(count + 1); // e.g., "Tutor 3"
+//           count++;
+//         }
+//         else {
+//           // the original name was something like "Tutor", so make
+//           // newName into, say, "Tutor 2"
+//           newName = p.Self.name + ' 2';
+//           count = 2;
+//         }
+//       } while ($.inArray(newName, peerNames) >= 0); // i.e., is newName in peerNames?
 
-      p.Self.update({name: newName}); // change our own name
-    }
-  });
+//       p.Self.update({name: newName}); // change our own name
+//     }
+//   });
 
-  TogetherJS.hub.on("updateOutput", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   TogetherJS.hub.on("updateOutput", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    if (isExecutingCode) {
-      return;
-    }
+//     if (isExecutingCode) {
+//       return;
+//     }
 
-    if (myVisualizer) {
-      // to prevent this call to updateOutput from firing its own TogetherJS event
-      updateOutputSignalFromRemote = true;
-      try {
-        myVisualizer.renderStep(msg.step);
-      }
-      finally {
-        updateOutputSignalFromRemote = false;
-      }
-    }
-  });
+//     if (myVisualizer) {
+//       // to prevent this call to updateOutput from firing its own TogetherJS event
+//       updateOutputSignalFromRemote = true;
+//       try {
+//         myVisualizer.renderStep(msg.step);
+//       }
+//       finally {
+//         updateOutputSignalFromRemote = false;
+//       }
+//     }
+//   });
 
-  TogetherJS.hub.on("executeCode", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   TogetherJS.hub.on("executeCode", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    if (isExecutingCode) {
-      return;
-    }
+//     if (isExecutingCode) {
+//       return;
+//     }
 
-    executeCodeSignalFromRemote = true;
-    try {
-      executeCode(msg.forceStartingInstr, msg.rawInputLst);
-    }
-    finally {
-      executeCodeSignalFromRemote = false;
-    }
+//     executeCodeSignalFromRemote = true;
+//     try {
+//       executeCode(msg.forceStartingInstr, msg.rawInputLst);
+//     }
+//     finally {
+//       executeCodeSignalFromRemote = false;
+//     }
 
-  });
+//   });
 
-  TogetherJS.hub.on("hashchange", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   TogetherJS.hub.on("hashchange", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    if (isExecutingCode) {
-      return;
-    }
+//     if (isExecutingCode) {
+//       return;
+//     }
 
-    console.log("TogetherJS RECEIVE hashchange", msg.appMode);
-    if (msg.appMode != appMode) {
-      updateAppDisplay(msg.appMode);
+//     console.log("TogetherJS RECEIVE hashchange", msg.appMode);
+//     if (msg.appMode != appMode) {
+//       updateAppDisplay(msg.appMode);
 
-      if (appMode == 'edit' && msg.codeInputScrollTop !== undefined &&
-          pyInputGetScrollTop() != msg.codeInputScrollTop) {
-        // hack: give it a bit of time to settle first ...
-        $.doTimeout('pyInputCodeMirrorInit', 200, function() {
-          pyInputSetScrollTop(msg.codeInputScrollTop);
-        });
-      }
-    }
-  });
+//       if (appMode == 'edit' && msg.codeInputScrollTop !== undefined &&
+//           pyInputGetScrollTop() != msg.codeInputScrollTop) {
+//         // hack: give it a bit of time to settle first ...
+//         $.doTimeout('pyInputCodeMirrorInit', 200, function() {
+//           pyInputSetScrollTop(msg.codeInputScrollTop);
+//         });
+//       }
+//     }
+//   });
 
-  TogetherJS.hub.on("codemirror-edit", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
-    $("#codeInputWarnings").hide();
-    $("#someoneIsTypingDiv").show();
+//   TogetherJS.hub.on("codemirror-edit", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
+//     $("#codeInputWarnings").hide();
+//     $("#someoneIsTypingDiv").show();
 
-    $.doTimeout('codeMirrorWarningTimeout', 1000, function() { // debounce
-      $("#codeInputWarnings").show();
-      $("#someoneIsTypingDiv").hide();
-    });
-  });
+//     $.doTimeout('codeMirrorWarningTimeout', 1000, function() { // debounce
+//       $("#codeInputWarnings").show();
+//       $("#someoneIsTypingDiv").hide();
+//     });
+//   });
 
-  TogetherJS.hub.on("requestSync", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   TogetherJS.hub.on("requestSync", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    if (TogetherJS.running) {
-      TogetherJS.send({type: "myAppState",
-                       myAppState: getAppState(),
-                       codeInputScrollTop: pyInputGetScrollTop(),
-                       pyCodeOutputDivScrollTop: myVisualizer ?
-                                                 myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop() :
-                                                 undefined});
-    }
-  });
+//     if (TogetherJS.running) {
+//       TogetherJS.send({type: "myAppState",
+//                        myAppState: getAppState(),
+//                        codeInputScrollTop: pyInputGetScrollTop(),
+//                        pyCodeOutputDivScrollTop: myVisualizer ?
+//                                                  myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop() :
+//                                                  undefined});
+//     }
+//   });
 
-  TogetherJS.hub.on("myAppState", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   TogetherJS.hub.on("myAppState", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    // if we didn't explicitly request a sync, then don't do anything
-    if (!togetherjsSyncRequested) {
-      return;
-    }
+//     // if we didn't explicitly request a sync, then don't do anything
+//     if (!togetherjsSyncRequested) {
+//       return;
+//     }
 
-    togetherjsSyncRequested = false;
+//     togetherjsSyncRequested = false;
 
-    var learnerAppState = msg.myAppState;
+//     var learnerAppState = msg.myAppState;
 
-    if (learnerAppState.mode == 'display') {
-      if (appStateEq(getAppState(), learnerAppState)) {
-        // update curInstr only
-        console.log("on:myAppState - app states equal, renderStep", learnerAppState.curInstr);
-        myVisualizer.renderStep(learnerAppState.curInstr);
+//     if (learnerAppState.mode == 'display') {
+//       if (appStateEq(getAppState(), learnerAppState)) {
+//         // update curInstr only
+//         console.log("on:myAppState - app states equal, renderStep", learnerAppState.curInstr);
+//         myVisualizer.renderStep(learnerAppState.curInstr);
 
-        if (msg.pyCodeOutputDivScrollTop !== undefined) {
-          myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(msg.pyCodeOutputDivScrollTop);
-        }
-      }
-      else if (!isExecutingCode) { // if already executing from a prior signal, ignore
-        console.log("on:myAppState - app states unequal, executing", learnerAppState);
-        syncAppState(learnerAppState);
+//         if (msg.pyCodeOutputDivScrollTop !== undefined) {
+//           myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(msg.pyCodeOutputDivScrollTop);
+//         }
+//       }
+//       else if (!isExecutingCode) { // if already executing from a prior signal, ignore
+//         console.log("on:myAppState - app states unequal, executing", learnerAppState);
+//         syncAppState(learnerAppState);
 
-        executeCodeSignalFromRemote = true;
-        try {
-          if (msg.pyCodeOutputDivScrollTop !== undefined) {
-            pendingCodeOutputScrollTop = msg.pyCodeOutputDivScrollTop; // NASTY global
-          }
-          executeCode(learnerAppState.curInstr);
-        }
-        finally {
-          executeCodeSignalFromRemote = false;
-        }
-      }
-    }
-    else {
-      assert(learnerAppState.mode == 'edit');
-      if (!appStateEq(getAppState(), learnerAppState)) {
-        console.log("on:myAppState - edit mode sync");
-        syncAppState(learnerAppState);
-        enterEditMode();
-      }
-    }
+//         executeCodeSignalFromRemote = true;
+//         try {
+//           if (msg.pyCodeOutputDivScrollTop !== undefined) {
+//             pendingCodeOutputScrollTop = msg.pyCodeOutputDivScrollTop; // NASTY global
+//           }
+//           executeCode(learnerAppState.curInstr);
+//         }
+//         finally {
+//           executeCodeSignalFromRemote = false;
+//         }
+//       }
+//     }
+//     else {
+//       assert(learnerAppState.mode == 'edit');
+//       if (!appStateEq(getAppState(), learnerAppState)) {
+//         console.log("on:myAppState - edit mode sync");
+//         syncAppState(learnerAppState);
+//         enterEditMode();
+//       }
+//     }
 
-    if (msg.codeInputScrollTop !== undefined) {
-      // give pyInputCodeMirror/pyInputAceEditor a bit of time to settle with
-      // its new value. this is hacky; ideally we have a callback function for
-      // when setValue() completes.
-      $.doTimeout('pyInputCodeMirrorInit', 200, function() {
-        pyInputSetScrollTop(msg.codeInputScrollTop);
-      });
-    }
-  });
+//     if (msg.codeInputScrollTop !== undefined) {
+//       // give pyInputCodeMirror/pyInputAceEditor a bit of time to settle with
+//       // its new value. this is hacky; ideally we have a callback function for
+//       // when setValue() completes.
+//       $.doTimeout('pyInputCodeMirrorInit', 200, function() {
+//         pyInputSetScrollTop(msg.codeInputScrollTop);
+//       });
+//     }
+//   });
 
-  TogetherJS.hub.on("syncAppState", function(msg) {
-    syncAppState(msg.myAppState);
-  });
+//   TogetherJS.hub.on("syncAppState", function(msg) {
+//     syncAppState(msg.myAppState);
+//   });
 
-  TogetherJS.hub.on("codeInputScroll", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
-    if (useCodeMirror) {
-      pyInputSetScrollTop(msg.scrollTop);
-    }
-    else {
-      // don't sync for Ace since I can't get it working properly yet
-    }
-  });
+//   TogetherJS.hub.on("codeInputScroll", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
+//     if (useCodeMirror) {
+//       pyInputSetScrollTop(msg.scrollTop);
+//     }
+//     else {
+//       // don't sync for Ace since I can't get it working properly yet
+//     }
+//   });
 
-  TogetherJS.hub.on("pyCodeOutputDivScroll", function(msg) {
-    // do NOT use a msg.sameUrl guard since that will miss some signals
-    // due to our funky URLs
+//   TogetherJS.hub.on("pyCodeOutputDivScroll", function(msg) {
+//     // do NOT use a msg.sameUrl guard since that will miss some signals
+//     // due to our funky URLs
 
-    if (myVisualizer) {
-      myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(msg.scrollTop);
-    }
-  });
+//     if (myVisualizer) {
+//       myVisualizer.domRoot.find('#pyCodeOutputDiv').scrollTop(msg.scrollTop);
+//     }
+//   });
 
-  $("#sharedSessionBtn").click(startSharedSession);
-  $("#stopTogetherJSBtn").click(TogetherJS); // toggles off
+//   // $("#sharedSessionBtn").click(startSharedSession);
+//   $("#stopTogetherJSBtn").click(TogetherJS); // toggles off
 
-  // fired when TogetherJS is activated. might fire on page load if there's
-  // already an open session from a prior page load in the recent past.
-  TogetherJS.on("ready", function () {
-    console.log("TogetherJS ready");
+//   // fired when TogetherJS is activated. might fire on page load if there's
+//   // already an open session from a prior page load in the recent past.
+//   TogetherJS.on("ready", function () {
+//     console.log("TogetherJS ready");
 
-    $("#sharedSessionDisplayDiv").show();
-    $("#adInfo").hide();
-    $("#ssDiv").hide();
-    $("#adHeader").hide();
+//     $("#sharedSessionDisplayDiv").show();
+//     $("#adInfo").hide();
+//     $("#ssDiv").hide();
+//     $("#adHeader").hide();
 
-    // send this to the server for the purposes of logging, but other
-    // clients shouldn't do anything with this data
-    if (TogetherJS.running) {
-      TogetherJS.send({type: "initialAppState",
-                       myAppState: getAppState(),
-                       user_uuid: supports_html5_storage() ? localStorage.getItem('opt_uuid') : undefined,
-                       // so that you can tell whether someone else
-                       // shared a TogetherJS URL with you to invite you
-                       // into this shared session:
-                       togetherjsInUrl: togetherjsInUrl});
-    }
+//     // send this to the server for the purposes of logging, but other
+//     // clients shouldn't do anything with this data
+//     if (TogetherJS.running) {
+//       TogetherJS.send({type: "initialAppState",
+//                        myAppState: getAppState(),
+//                        user_uuid: supports_html5_storage() ? localStorage.getItem('opt_uuid') : undefined,
+//                        // so that you can tell whether someone else
+//                        // shared a TogetherJS URL with you to invite you
+//                        // into this shared session:
+//                        togetherjsInUrl: togetherjsInUrl});
+//     }
 
-    requestSync(); // immediately try to sync upon startup so that if
-                   // others are already in the session, we will be
-                   // synced up. and if nobody is here, then this is a NOP.
+//     requestSync(); // immediately try to sync upon startup so that if
+//                    // others are already in the session, we will be
+//                    // synced up. and if nobody is here, then this is a NOP.
 
-    TogetherjsReadyHandler(); // needs to be defined in each frontend
-    redrawConnectors(); // update all arrows at the end
-  });
+//     TogetherjsReadyHandler(); // needs to be defined in each frontend
+//     redrawConnectors(); // update all arrows at the end
+//   });
 
-  // emitted when TogetherJS is closed. This is not emitted when the
-  // webpage simply closes or navigates elsewhere, ONLY when TogetherJS
-  // is explicitly stopped via a call to TogetherJS()
-  TogetherJS.on("close", function () {
-    console.log("TogetherJS close");
+//   // emitted when TogetherJS is closed. This is not emitted when the
+//   // webpage simply closes or navigates elsewhere, ONLY when TogetherJS
+//   // is explicitly stopped via a call to TogetherJS()
+//   TogetherJS.on("close", function () {
+//     console.log("TogetherJS close");
 
-    $("#togetherjsStatus").html(''); // clear it
-    $("#sharedSessionDisplayDiv").hide();
-    $("#adInfo").show();
-    $("#ssDiv").show();
-    $("#adHeader").show();
+//     $("#togetherjsStatus").html(''); // clear it
+//     $("#sharedSessionDisplayDiv").hide();
+//     $("#adInfo").show();
+//     $("#ssDiv").show();
+//     $("#adHeader").show();
 
-    TogetherjsCloseHandler(); // needs to be defined in each frontend
-    redrawConnectors(); // update all arrows at the end
-  });
-}
+//     TogetherjsCloseHandler(); // needs to be defined in each frontend
+//     redrawConnectors(); // update all arrows at the end
+//   });
+// }
 
-function TogetherjsReadyHandler() {
-  alert("ERROR: need to override TogetherjsReadyHandler()");
-}
+// function TogetherjsReadyHandler() {
+//   alert("ERROR: need to override TogetherjsReadyHandler()");
+// }
 
-function TogetherjsCloseHandler() {
-  alert("ERROR: need to override TogetherjsCloseHandler()");
-}
+// function TogetherjsCloseHandler() {
+//   alert("ERROR: need to override TogetherjsCloseHandler()");
+// }
 
-function startSharedSession() {
-  $("#ssDiv").hide(); // hide ASAP!
-  $("#togetherjsStatus").html("Please wait ... loading shared session");
-  TogetherJS();
-}
+// function startSharedSession() {
+//   $("#ssDiv").hide(); // hide ASAP!
+//   $("#togetherjsStatus").html("Please wait ... loading shared session");
+//   TogetherJS();
+// }
 
-function populateTogetherJsShareUrl() {
-  // without anything after the '#' in the hash
-  var cleanUrl = $.param.fragment(location.href, {}, 2 /* override */);
-  var urlToShare = cleanUrl + 'togetherjs=' + TogetherJS.shareId();
-  $("#togetherjsStatus").html('<div>\
-                               Send the URL below to invite someone to join this shared session:\
-                               </div>\
-                               <input type="text" style="font-size: 10pt; \
-                               font-weight: bold; padding: 4px;\
-                               margin-top: 3pt; \
-                               margin-bottom: 6pt;" \
-                               id="togetherjsURL" size="80" readonly="readonly"/>\
-                               <button id="syncBtn" type="button">Force sync</button>\
-                               ');
-  $("#togetherjsURL").val(urlToShare).attr('size', urlToShare.length + 20);
-  $("#syncBtn").click(requestSync);
+// function populateTogetherJsShareUrl() {
+//   // without anything after the '#' in the hash
+//   var cleanUrl = $.param.fragment(location.href, {}, 2 /* override */);
+//   var urlToShare = cleanUrl + 'togetherjs=' + TogetherJS.shareId();
+//   $("#togetherjsStatus").html('<div>\
+//                                Send the URL below to invite someone to join this shared session:\
+//                                </div>\
+//                                <input type="text" style="font-size: 10pt; \
+//                                font-weight: bold; padding: 4px;\
+//                                margin-top: 3pt; \
+//                                margin-bottom: 6pt;" \
+//                                id="togetherjsURL" size="80" readonly="readonly"/>\
+//                                <button id="syncBtn" type="button">Force sync</button>\
+//                                ');
+//   $("#togetherjsURL").val(urlToShare).attr('size', urlToShare.length + 20);
+//   $("#syncBtn").click(requestSync);
 
-  // deployed on 2015-03-06
-  $("#togetherjsStatus").append(emailNotificationHtml);
-
-  // append post shared session survey
-  //
-  // survey for shared sessions, deployed on 2014-06-06, taken down on
-  // 2015-03-06 due to lack of useful responses
-  /*
-  $("#togetherjsStatus").append(postSessionSurvey);
-  $('.star-rating :radio').change(function() {
-    if (TogetherJS.running) {
-      TogetherJS.send({type: "surveyHowUsefulStars",
-                       stars: Number(this.value)});
-    }
-  });
-
-  $('#submitSessionSurveyBtn').click(function() {
-    var resp = $('#sharedSessionWhatLearned').val();
-    if (TogetherJS.running && resp) {
-      TogetherJS.send({type: "surveyFreetextQuestion",
-                       question: "What did you just learn?",
-                       answer: $('#sharedSessionWhatLearned').val()});
-
-      $("#sharedSessionWhatLearned").val('');
-      $("#sharedSessionWhatLearnedThanks").show();
-      $.doTimeout('sharedSessionWhatLearnedThanksFadeOut', 1000, function() {
-        $("#sharedSessionWhatLearnedThanks").fadeOut(2000);
-      });
-    }
-  });
-  */
-}
+//   // deployed on 2015-03-06
+//   // $("#togetherjsStatus").append(emailNotificationHtml);
+// }
 
 // END - shared session stuff
 
@@ -825,7 +721,7 @@ var num414Tries = 0; // hacky global
 
 // run at the END so that everything else can be initialized first
 function genericOptFrontendReady() {
-  initTogetherJS(); // initialize early
+  // initTogetherJS(); // initialize early
 
 
   // be friendly to the browser's forward and back buttons
@@ -1301,7 +1197,7 @@ function updateAppDisplay(newAppMode) {
   $('#urlOutput,#embedCodeOutput').val(''); // clear to avoid stale values
 
   // log at the end after appMode gets canonicalized
-  logEvent({type: 'updateAppDisplay', mode: appMode, appState: getAppState()});
+  // logEvent({type: 'updateAppDisplay', mode: appMode, appState: getAppState()});
 }
 
 
@@ -1487,7 +1383,7 @@ function executeCodeAndCreateViz(codeToExec,
               if (args.myViz.prevLineIsReturn) {
                 obj.prevLineIsReturn = true;
               }
-              logEvent(obj);
+              // logEvent(obj);
             });
 
             // 2014-05-25: implemented more detailed tracing for surveys
@@ -1545,16 +1441,16 @@ function executeCodeAndCreateViz(codeToExec,
       // do logging at the VERY END after the dust settles ...
       // and don't do it for iframe-embed.js since getAppState doesn't
       // work in that case ...
-      if (originFrontendJsFile !== 'iframe-embed.js') {
-        logEvent({type: 'doneExecutingCode',
-                  appState: getAppState(),
-                  // enough to reconstruct the ExecutionVisualizer object
-                  backendDataJSON: JSON.stringify(dataFromBackend), // for easier transport and compression
-                  frontendOptionsObj: frontendOptionsObj,
-                  backendOptionsObj: backendOptionsObj,
-                  killerException: killerException, // if there's, say, a syntax error
-                  });
-      }
+      // if (originFrontendJsFile !== 'iframe-embed.js') {
+      //   logEvent({type: 'doneExecutingCode',
+      //             appState: getAppState(),
+      //             // enough to reconstruct the ExecutionVisualizer object
+      //             backendDataJSON: JSON.stringify(dataFromBackend), // for easier transport and compression
+      //             frontendOptionsObj: frontendOptionsObj,
+      //             backendOptionsObj: backendOptionsObj,
+      //             killerException: killerException, // if there's, say, a syntax error
+      //             });
+      // }
 
       if (killerException) {
         var excObj = {killerException: killerException, myAppState: getAppState()};
