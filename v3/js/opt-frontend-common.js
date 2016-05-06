@@ -44,60 +44,69 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //var python3_backend_script = 'web_exec_py3.py';
 
 // uncomment below if you're running on Google App Engine using the built-in app.yaml
-var python2_backend_script = 'exec';
-var python3_backend_script = 'exec';
+
+// HANNAH 5/6/16 commented these out
+// var python2_backend_script = 'exec';
+// var python3_backend_script = 'exec';
 
 // KRAZY experimental KODE!!! Use a custom hacked CPython interpreter
-var python2crazy_backend_script = 'web_exec_py2-crazy.py';
+// var python2crazy_backend_script = 'web_exec_py2-crazy.py';
 // On Google App Engine, simply run dev_appserver.py with the
 // crazy custom py2crazy CPython interpreter to get 2crazy mode
 //var python2crazy_backend_script = 'exec';
 
 // empty dummy just to do logging on the Apache's server
 var js_backend_script = 'web_exec_js.py';
-var ts_backend_script = 'web_exec_ts.py';
-var java_backend_script = 'web_exec_java.py';
-var ruby_backend_script = 'web_exec_ruby.py';
+// var ts_backend_script = 'web_exec_ts.py';
+// var java_backend_script = 'web_exec_java.py';
+// var ruby_backend_script = 'web_exec_ruby.py';
 
 // this is customized to my own Linode server:
 // these are the REAL endpoints, accessed via jsonp. code is in ../../v4-cokapi/
 if (window.location.protocol === 'https:') {
   // my certificate for https is registered via cokapi.com, so use it for now:
   var JS_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_js_jsonp';
-  var TS_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_ts_jsonp';
-  var JAVA_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_java_jsonp';
-  var RUBY_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_ruby_jsonp';
-} else {
+  // var TS_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_ts_jsonp';
+  // var JAVA_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_java_jsonp';
+  // var RUBY_JSONP_ENDPOINT = 'https://cokapi.com:8001/exec_ruby_jsonp';
+} 
+else {
   var JS_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_js_jsonp'; // for deployment
-  var TS_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_ts_jsonp'; // for deployment
-  var JAVA_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_java_jsonp'; // for deployment
-  var RUBY_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_ruby_jsonp'; // for deployment
+  // var TS_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_ts_jsonp'; // for deployment
+  // var JAVA_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_java_jsonp'; // for deployment
+  // var RUBY_JSONP_ENDPOINT = 'http://104.237.139.253:3000/exec_ruby_jsonp'; // for deployment
 }
 
 
+// function langToBackendScript(lang) {
+//   var backend_script = null;
+//   if (lang == '2') {
+//       backend_script = python2_backend_script;
+//   } else if (lang == '3') {
+//       backend_script = python3_backend_script;
+//   } else if (lang == '2crazy') {
+//       backend_script = python2crazy_backend_script;
+//   } else if (lang == 'js') {
+//       backend_script = js_backend_script;
+//   } else if (lang == 'ts') {
+//       backend_script = ts_backend_script;
+//   } else if (lang == 'ruby') {
+//       backend_script = ruby_backend_script;
+//   } else if (lang == 'java') {
+//       backend_script = java_backend_script;
+//   }
+//   assert(backend_script);
+//   return backend_script;
+// }
+
+// Hannah replaced above function with this (5/5/16):
 function langToBackendScript(lang) {
-  var backend_script = null;
-  if (lang == '2') {
-      backend_script = python2_backend_script;
-  } else if (lang == '3') {
-      backend_script = python3_backend_script;
-  } else if (lang == '2crazy') {
-      backend_script = python2crazy_backend_script;
-  } else if (lang == 'js') {
-      backend_script = js_backend_script;
-  } else if (lang == 'ts') {
-      backend_script = ts_backend_script;
-  } else if (lang == 'ruby') {
-      backend_script = ruby_backend_script;
-  } else if (lang == 'java') {
-      backend_script = java_backend_script;
-  }
-  assert(backend_script);
-  return backend_script;
+  return js_backend_script;
 }
 
 
-var domain = "http://pythontutor.com/"; // for deployment
+// var domain = "http://pythontutor.com/"; // for deployment
+var domain = "http://vizit.tech/";
 
 
 var isExecutingCode = false; // nasty, nasty global
@@ -114,9 +123,12 @@ var useCodeMirror = false; // true -> use CodeMirror, false -> use Ace
 var prevExecutionExceptionObjLst = [];
 
 
+// Hannah: For some reason, commenting this out makes it so you have to click
+// Visualize Execution multiple times (but only sometimes...)
 var loggingSocketIO = undefined; // socket.io instance -- OPTIONAL: not all frontends use it
 
 // From http://stackoverflow.com/a/8809472
+// Hannah: generates "Globally/Universally Unique identifiers"
 function generateUUID(){
     var d = new Date().getTime();
     var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -125,7 +137,7 @@ function generateUUID(){
         return (c=='x' ? r : (r&0x7|0x8)).toString(16);
     });
     return uuid;
-};
+}
 
 var sessionUUID = generateUUID(); // remains constant throughout one page load ("session")
 
@@ -148,7 +160,7 @@ if (typeof localStorage === 'object') {
     }
 }
 
-
+// Hannah: What is diff_match_patch?? https://code.google.com/p/google-diff-match-patch/wiki/API
 var dmp = new diff_match_patch();
 var curCode = '';
 var deltaObj = undefined;
@@ -156,14 +168,14 @@ var deltaObj = undefined;
 function initDeltaObj() {
   // make sure the editor already exists
   // (editor doesn't exist when you're, say, doing an iframe embed)
-  if (!pyInputAceEditor && !pyInputCodeMirror) {
-    return;
-  }
+  // if (!pyInputAceEditor && !pyInputCodeMirror) {
+  //   return;
+  // }
 
   // v is the version number
   //   1 (version 1 was released on 2014-11-05)
   //   2 (version 2 was released on 2015-09-16, added a startTime field)
-  deltaObj = {start: pyInputGetValue(), deltas: [], v: 2,
+  deltaObj = {start: pyInputAceEditor.getValue(), deltas: [], v: 2,
               startTime: new Date().getTime()};
 }
 
@@ -175,12 +187,14 @@ function initAceEditor(height) {
   s.setUseSoftTabs(true);
   // disable extraneous indicators:
   s.setFoldStyle('manual'); // no code folding indicators
-  pyInputAceEditor.setHighlightActiveLine(false);
+  pyInputAceEditor.setHighlightActiveLine(true); // Hannah changed from false to true
   pyInputAceEditor.setShowPrintMargin(false);
   pyInputAceEditor.setBehavioursEnabled(false);
 
-  // auto-grow height as fit
-  pyInputAceEditor.setOptions({minLines: 18, maxLines: 1000});
+  // // auto-grow height as fit
+  // pyInputAceEditor.setOptions({minLines: 18, maxLines: 1000});
+  // Hannah changed, because I prefer scrolling to auto-growing
+
 
   $('#codeInputPane').css('width', '700px');
   $('#codeInputPane').css('height', height + 'px'); // VERY IMPORTANT so that it works on I.E., ugh!
@@ -194,7 +208,8 @@ function initAceEditor(height) {
 
   // don't do real-time syntax checks:
   // https://github.com/ajaxorg/ace/wiki/Syntax-validation
-  s.setOption("useWorker", false);
+  // s.setOption("useWorker", false);
+  s.setOption("useWorker", true); //Hannah did this
 
   setAceMode();
 
@@ -211,38 +226,40 @@ function setAceMode() {
   var selectorVal = $('#pythonVersionSelector').val();
   var mod;
   var tabSize = 2;
-  if (selectorVal === 'java') {
-    mod = 'java';
-    // if blank empty, then initialize to a Java skeleton:
-    if ($.trim(pyInputGetValue()) === '') {
-      pyInputSetValue(JAVA_BLANK_TEMPLATE);
-    }
-  } else if (selectorVal === 'js') {
+  // if (selectorVal === 'java') {
+  //   mod = 'java';
+  //   // if blank empty, then initialize to a Java skeleton:
+  //   if ($.trim(pyInputGetValue()) === '') {
+  //     pyInputSetValue(JAVA_BLANK_TEMPLATE);
+  //   }
+  // } else 
+  if (selectorVal === 'js') {
     mod = 'javascript';
     // if it's just a Java skeleton, then reset to blank:
-    if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
+    if (pyInputAceEditor.getValue() === JAVA_BLANK_TEMPLATE) {
       pyInputSetValue('');
     }
-  } else if (selectorVal === 'ts') {
-    mod = 'typescript';
-    // if it's just a Java skeleton, then reset to blank:
-    if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
-      pyInputSetValue('');
-    }
-  } else if (selectorVal === 'ruby') {
-    mod = 'ruby';
-    // if it's just a Java skeleton, then reset to blank:
-    if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
-      pyInputSetValue('');
-    }
-  } else {
-    mod = 'python';
-    tabSize = 4; // PEP8
-    // if it's just a Java skeleton, then reset to blank:
-    if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
-      pyInputSetValue('');
-    }
-  }
+  } 
+  // else if (selectorVal === 'ts') {
+  //   mod = 'typescript';
+  //   // if it's just a Java skeleton, then reset to blank:
+  //   if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
+  //     pyInputSetValue('');
+  //   }
+  // } else if (selectorVal === 'ruby') {
+  //   mod = 'ruby';
+  //   // if it's just a Java skeleton, then reset to blank:
+  //   if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
+  //     pyInputSetValue('');
+  //   }
+  // } else {
+  //   mod = 'python';
+  //   tabSize = 4; // PEP8
+  //   // if it's just a Java skeleton, then reset to blank:
+  //   if (pyInputGetValue() === JAVA_BLANK_TEMPLATE) {
+  //     pyInputSetValue('');
+  //   }
+  // }
   assert(mod);
 
   var s = pyInputAceEditor.getSession();
@@ -261,7 +278,7 @@ function snapshotCodeDiff() {
     return;
   }
 
-  var newCode = pyInputGetValue();
+  var newCode = pyInputAceEditor.getValue();
   var timestamp = new Date().getTime();
 
   //console.log('Orig:', curCode);
@@ -728,7 +745,7 @@ function redrawConnectors() {
   }
 }
 
-function setFronendError(lines) {
+function setFrontendError(lines) {
   $("#frontendErrorOutput").html(lines.map(htmlspecialchars).join('<br/>'));
   $("#frontendErrorOutput").show();
 }
@@ -749,12 +766,14 @@ function supports_html5_storage() {
 
 // abstraction so that we can use either CodeMirror or Ace as our code editor
 function pyInputGetValue() {
-  if (useCodeMirror) {
-    return pyInputCodeMirror.getValue();
-  }
-  else {
-    return pyInputAceEditor.getValue();
-  }
+  // if (useCodeMirror) {
+  //   return pyInputCodeMirror.getValue();
+  // }
+  // else {
+  //   return pyInputAceEditor.getValue();
+  // }
+  return pyInputAceEditor.getValue(); // Hannah changed 5/6/16
+
 }
 
 function pyInputSetValue(dat) {
@@ -998,10 +1017,10 @@ function genericOptFrontendReady() {
         $("#executeBtn").click();
       } else {
         num414Tries = 0;
-        setFronendError(["Server error! Your code might be too long for this tool. Shorten your code and re-try."]);
+        setFrontendError(["Server error! Your code might be too long for this tool. Shorten your code and re-try."]);
       }
     } else {
-      setFronendError(["Server error! Your code might be taking too much time to run or using too much memory.",
+      setFrontendError(["Server error! Your code might be taking too much time to run or using too much memory.",
                        "Report a bug to philip@pgbovine.net by clicking the 'Generate permanent link' button",
                        "at the bottom of this page and including a URL in your email."]);
     }
@@ -1122,7 +1141,7 @@ function setToggleOptions(dat) {
 function getAppState() {
   assert(originFrontendJsFile); // global var defined in each frontend
 
-  var ret = {code: pyInputGetValue(),
+  var ret = {code: pyInputAceEditor.getValue(),
              mode: appMode,
              origin: originFrontendJsFile,
              cumulative: $('#cumulativeModeSelector').val(),
@@ -1282,8 +1301,8 @@ function updateAppDisplay(newAppMode) {
 
 function executeCodeFromScratch() {
   // don't execute empty string:
-  if ($.trim(pyInputGetValue()) == '') {
-    setFronendError(["Type in some code to visualize."]);
+  if ($.trim(pyInputAceEditor.getValue()) == '') {
+    setFrontendError(["Type in some code to visualize."]);
     return;
   }
 
@@ -1409,14 +1428,14 @@ function executeCodeAndCreateViz(codeToExec,
 
         if (trace.length == 1) {
           killerException = trace[0]; // killer!
-          setFronendError([trace[0].exception_msg]);
+          setFrontendError([trace[0].exception_msg]);
         }
         else if (trace[trace.length - 1].exception_msg) {
           killerException = trace[trace.length - 1]; // killer!
-          setFronendError([trace[trace.length - 1].exception_msg]);
+          setFrontendError([trace[trace.length - 1].exception_msg]);
         }
         else {
-          setFronendError(["Unknown error. Reload the page and try again.",
+          setFrontendError(["Unknown error. Reload the page and try again.",
                            "Report a bug to philip@pgbovine.net by clicking on the 'Generate URL'",
                            "button at the bottom and including a URL in your email."]);
         }
@@ -1543,7 +1562,7 @@ function executeCodeAndCreateViz(codeToExec,
     }
 
     if (!backendScript) {
-      setFronendError(["Server configuration error: No backend script",
+      setFrontendError(["Server configuration error: No backend script",
                        "Report a bug to philip@pgbovine.net by clicking on the 'Generate URL'",
                        "button at the bottom and including a URL in your email."]);
       return;
@@ -1575,29 +1594,33 @@ function executeCodeAndCreateViz(codeToExec,
     jsonp_endpoint = null;
 
     // hacky!
-    if (backendScript === python2_backend_script) {
-      frontendOptionsObj.lang = 'py2';
-    } else if (backendScript === python3_backend_script) {
-      frontendOptionsObj.lang = 'py3';
-    } else if (backendScript === js_backend_script) {
+    // if (backendScript === python2_backend_script) {
+    //   frontendOptionsObj.lang = 'py2';
+    // } else if (backendScript === python3_backend_script) {
+    //   frontendOptionsObj.lang = 'py3';
+    // } else 
+    if (backendScript === js_backend_script) {
       frontendOptionsObj.lang = 'js';
       jsonp_endpoint = JS_JSONP_ENDPOINT;
-    } else if (backendScript === ts_backend_script) {
-      frontendOptionsObj.lang = 'ts';
-      jsonp_endpoint = TS_JSONP_ENDPOINT;
-    } else if (backendScript === ruby_backend_script) {
-      frontendOptionsObj.lang = 'ruby';
-      jsonp_endpoint = RUBY_JSONP_ENDPOINT;
-    } else if (backendScript === java_backend_script) {
-      frontendOptionsObj.lang = 'java';
-      frontendOptionsObj.disableHeapNesting = true; // never nest Java objects, seems like a good default
-      jsonp_endpoint = JAVA_JSONP_ENDPOINT;
-    }
+    } 
+    // else if (backendScript === ts_backend_script) {
+    //   frontendOptionsObj.lang = 'ts';
+    //   jsonp_endpoint = TS_JSONP_ENDPOINT;
+    // } else if (backendScript === ruby_backend_script) {
+    //   frontendOptionsObj.lang = 'ruby';
+    //   jsonp_endpoint = RUBY_JSONP_ENDPOINT;
+    // } else if (backendScript === java_backend_script) {
+    //   frontendOptionsObj.lang = 'java';
+    //   frontendOptionsObj.disableHeapNesting = true; // never nest Java objects, seems like a good default
+    //   jsonp_endpoint = JAVA_JSONP_ENDPOINT;
+    // }
 
-    if (backendScript === js_backend_script ||
-        backendScript === ts_backend_script ||
-        backendScript === java_backend_script ||
-        backendScript === ruby_backend_script) {
+    if (backendScript === js_backend_script 
+      // ||
+      //   backendScript === ts_backend_script ||
+      //   backendScript === java_backend_script ||
+      //   backendScript === ruby_backend_script
+        ) {
       // hack! should just be a dummy script for logging only
       $.get(backendScript,
             {user_script : codeToExec,
@@ -1676,61 +1699,11 @@ function submitUpdateHistory(why) {
   }
 }
 
-
-/* For survey questions:
-
-Versions of survey wording:
-
-v1: (deployed around 2014-04-09, revoked on 2014-06-20)
-
-var survey_v1 = '\n\
-<p style="margin-top: 10px; line-height: 175%;">\n\
-[Optional] Please answer these questions to support our research and to help improve this tool.<br/>\n\
-Where is your code from? <input type="text" id="code-origin-Q" class="surveyQ" size=60 maxlength=140/><br/>\n\
-What do you hope to learn by visualizing it? <input type="text" id="what-learn-Q" class="surveyQ" size=55 maxlength=140/><br/>\n\
-How did you find this web site? <input type="text" id="how-find-Q" class="surveyQ" size=60 maxlength=140/>\n\
-<input type="hidden" id="Q-version" value="v1"/> <!-- for versioning -->\n\
-</p>'
-
-v2: (deployed on 2014-06-20, revoked on 2014-06-28)
-
-var survey_v2 = '\n\
-<p style="margin-top: 10px; line-height: 175%;">\n\
-[Optional] Please answer these questions to support our research and to help improve this tool.<br/>\n\
-What do you hope to learn by visualizing this code? <input type="text" id="what-learn-Q" class="surveyQ" size=60 maxlength=200/><br/>\n\
-Paste a website link to a course that uses Python: <input type="text" id="course-website-Q" class="surveyQ" size=55 maxlength=300/><br/>\n\
-<span style="font-size: 8pt; color: #666;">(This could be a course that you\'re taking or teaching in school, or that you\'ve taken or taught in the past.)</span>\n\
-<input type="hidden" id="Q-version" value="v2"/> <!-- for versioning -->\n\
-</p>'
-
-v3: (deployed on 2014-06-28, revoked on 2014-07-13) [it's a simplified version of v1]
-var survey_v3 = '\n\
-<p style="margin-top: 10px; line-height: 175%;">\n\
-[Optional] Please answer these questions to support our research and to help improve this tool.<br/>\n\
-Where is your code from? <input type="text" id="code-origin-Q" class="surveyQ" size=60 maxlength=140/><br/>\n\
-What do you hope to learn by visualizing it? <input type="text" id="what-learn-Q" class="surveyQ" size=55 maxlength=140/><br/>\n\
-<input type="hidden" id="Q-version" value="v3"/> <!-- for versioning -->\n\
-</p>'
-
-v4: (deployed on 2014-07-13, revoked on 2015-03-01)
-[an even more simplified version of v1 just to focus on ONE important question]
-var survey_v4 = '\n\
-<p style="margin-top: 10px; line-height: 175%;">\n\
-[Optional] What do you hope to learn by visualizing this code?<br/>\n\
-<input type="text" id="what-learn-Q" class="surveyQ" size=80 maxlength=300/><br/>\n\
-<input type="hidden" id="Q-version" value="v4"/> <!-- for versioning -->\n\
-</p>'
-
-v5: (deployed on 2015-03-01, retired on 2015-08-31) - target older population
-var survey_v5 = '\n\
-<p style="margin-top: 10px; line-height: 175%;">\n\
-If you are <span style="color: #333; font-weight: bold;">at least 60 years old</span> and would like to help our research on how older people learn programming, please enter your email address here:\n\
-<input type="text" id="email-addr-Q" class="surveyQ" size=30 maxlength=300/><br/>\n\
-<input type="hidden" id="Q-version" value="v5"/> <!-- for versioning -->\n\
-</p>'
-
+/*
 v6: (deployed on 2015-08-31) - use Google Forms links
 */
+
+// for some reason, all this survey stuff is necessary for the input pane to show
 var survey_v6 = '\n\
 <p style="font-size: 9pt; margin-top: 10px; line-height: 175%;">\n\
 Please support our research and keep this tool free by <b><a href="https://docs.google.com/forms/d/1-aKilu0PECHZVRSIXHv8vJpEuKUO9uG3MrH864uX56U/viewform" target="_blank">filling out this short survey</a></b>.<br/>\n\
@@ -1743,99 +1716,6 @@ function setSurveyHTML() {
 }
 
 function getSurveyObject() {
-  /* v1
-  var code_origin_Q_val = $('#code-origin-Q').val();
-  var what_learn_Q_val = $('#what-learn-Q').val();
-  var how_find_Q_val = $('#how-find-Q').val();
-
-  var ret = null;
-
-  if (code_origin_Q_val || what_learn_Q_val || how_find_Q_val) {
-    ret = {
-      ver: $('#Q-version').val(),
-      code_origin_Q: code_origin_Q_val,
-      what_learn_Q: what_learn_Q_val,
-      how_find_Q: how_find_Q_val,
-    }
-  }
-  */
-
-  /* v2
-  var what_learn_Q_val = $('#what-learn-Q').val();
-  var course_website_Q_val = $('#course-website-Q').val();
-
-  var ret = null;
-
-  if (what_learn_Q_val || course_website_Q_val) {
-    ret = {
-      ver: $('#Q-version').val(),
-      what_learn_Q: what_learn_Q_val,
-      course_website_Q: course_website_Q_val,
-    }
-  }
-  */
-
-  /* v3
-  var code_origin_Q_val = $('#code-origin-Q').val();
-  var what_learn_Q_val = $('#what-learn-Q').val();
-
-  var ret = null;
-
-  if (code_origin_Q_val || what_learn_Q_val) {
-    ret = {
-      ver: $('#Q-version').val(),
-      code_origin_Q: code_origin_Q_val,
-      what_learn_Q: what_learn_Q_val,
-    }
-  }
-  */
-
-  /* v4 */
-  /*
-  var ret = {
-    ver: $('#Q-version').val(),
-  }
-
-  var what_learn_Q_val = $('#what-learn-Q').val();
-  if ($.trim(what_learn_Q_val)) {
-    ret.what_learn_Q = what_learn_Q_val;
-    ret.testing_group = 'c'; // special group for users who have filled out this
-                             // execution-time survey
-  } else {
-    // assign to 'a' or 'b' group for A/B testing:
-    var grp = 'ERROR'; // default error sentinel
-
-    // if we have localStorage, then get/set a testing_group field to ensure
-    // some consistency across different sessions from the same user.
-    // of course, this isn't foolproof by any means, but it's a start
-    if (supports_html5_storage()) {
-      var saved_grp = localStorage.getItem('testing_group');
-      if (saved_grp) {
-        grp = saved_grp;
-      } else {
-        grp = (Math.random() < 0.5) ? 'a' : 'b';
-        localStorage.setItem('testing_group', grp);
-      }
-    } else {
-      grp = (Math.random() < 0.5) ? 'a' : 'b';
-    }
-
-    ret.testing_group = grp;
-  }
-  */
-
-  /* v5
-  var ret = {
-    ver: $('#Q-version').val(),
-  }
-
-  var email_Q_val = $('#email-addr-Q').val();
-  if ($.trim(email_Q_val)) {
-    ret.email_Q_val = email_Q_val;
-  }
-
-  return ret;
-  */
 
   return null;
 }
@@ -1843,297 +1723,31 @@ function getSurveyObject() {
 
 // survey for shared sessions, deployed on 2014-06-06, taken down on
 // 2015-03-06 due to lack of useful responses
-var postSessionSurvey = '\n\
-<div id="postSessionSurveyDiv" style="border: 1px solid #BE554E; padding: 5px; margin-top: 5px; line-height: 175%;">\n\
-<span style="font-size: 8pt; color: #666;">Support our research by giving anonymous feedback before ending your session.</span><br/>\n\
-How useful was this particular session? (click star to rate)\n\
-<span class="star-rating togetherjsIgnore">\n\
-  <input type="radio" class="togetherjsIgnore" name="rating" value="1"/><i></i>\n\
-  <input type="radio" class="togetherjsIgnore" name="rating" value="2"/><i></i>\n\
-  <input type="radio" class="togetherjsIgnore" name="rating" value="3"/><i></i>\n\
-  <input type="radio" class="togetherjsIgnore" name="rating" value="4"/><i></i>\n\
-  <input type="radio" class="togetherjsIgnore" name="rating" value="5"/><i></i>\n\
-</span>\n\
-<br/>\
-What did you just learn? <input type="text" id="sharedSessionWhatLearned" class="surveyQ togetherjsIgnore" size=60 maxlength=140/>\n\
-<button id="submitSessionSurveyBtn" type="button" style="font-size: 8pt;">Submit</button>\n\
-<span id="sharedSessionWhatLearnedThanks" style="color: #e93f34; font-weight: bold; font-size: 10pt; display: none;">Thanks!</span>\n\
-</div>'
+// var postSessionSurvey = '\n\
+// <div id="postSessionSurveyDiv" style="border: 1px solid #BE554E; padding: 5px; margin-top: 5px; line-height: 175%;">\n\
+// <span style="font-size: 8pt; color: #666;">Support our research by giving anonymous feedback before ending your session.</span><br/>\n\
+// How useful was this particular session? (click star to rate)\n\
+// <span class="star-rating togetherjsIgnore">\n\
+//   <input type="radio" class="togetherjsIgnore" name="rating" value="1"/><i></i>\n\
+//   <input type="radio" class="togetherjsIgnore" name="rating" value="2"/><i></i>\n\
+//   <input type="radio" class="togetherjsIgnore" name="rating" value="3"/><i></i>\n\
+//   <input type="radio" class="togetherjsIgnore" name="rating" value="4"/><i></i>\n\
+//   <input type="radio" class="togetherjsIgnore" name="rating" value="5"/><i></i>\n\
+// </span>\n\
+// <br/>\
+// What did you just learn? <input type="text" id="sharedSessionWhatLearned" class="surveyQ togetherjsIgnore" size=60 maxlength=140/>\n\
+// <button id="submitSessionSurveyBtn" type="button" style="font-size: 8pt;">Submit</button>\n\
+// <span id="sharedSessionWhatLearnedThanks" style="color: #e93f34; font-weight: bold; font-size: 10pt; display: none;">Thanks!</span>\n\
+// </div>'
 
 // deployed on 2015-03-06
-var emailNotificationHtml = '<div style="border: 2px solid #BE554E; padding: 5px; margin-top: 15px; margin-bottom: 15px; line-height: 150%; font-size: 10pt; width: 600px;">If you enjoyed using this <em>shared sessions</em> feature, please take a minute to fill out a <a href="https://docs.google.com/forms/d/126ZijTGux_peoDusn1F9C1prkR226897DQ0MTTB5Q4M/viewform" target="_blank"><b>three-question survey</b></a> to help our research. Thank you!</div>'
+// var emailNotificationHtml = '<div style="border: 2px solid #BE554E; padding: 5px; margin-top: 15px; margin-bottom: 15px; line-height: 150%; font-size: 10pt; width: 600px;">If you enjoyed using this <em>shared sessions</em> feature, please take a minute to fill out a <a href="https://docs.google.com/forms/d/126ZijTGux_peoDusn1F9C1prkR226897DQ0MTTB5Q4M/viewform" target="_blank"><b>three-question survey</b></a> to help our research. Thank you!</div>'
 
 // display-mode survey, which is shown when the user is in 'display' mode
 // As of Version 3, this runs every time code is executed, so make sure event
 // handlers don't unnecessarily stack up
-function initializeDisplayModeSurvey() {
-  /* Version 1 - started experiment on 2014-04-09, put on hold on 2014-05-02
-
-Hard-coded HTML in surveyHeader:
-
-<div id="surveyHeader" style="margin-bottom: 5pt; display: none;">
-  <div id="vizSurveyLabel" style="font-size: 8pt; color: #666;">
-  Support our research by clicking a button when you see something interesting in the visualization.<br/>
-  </div>
-  <div>
-    <button class="surveyBtn" type="button">Eureka! Now I understand.</button>
-    <button class="surveyBtn" type="button">I learned something new!</button>
-    <button class="surveyBtn" type="button">I found the bug in my code!</button>
-    <button class="surveyBtn" type="button">This looks confusing.</button>
-    <button class="surveyBtn" type="button">I have another comment.</button>
-  </div>
-</div>
-
-[when any button is clicked a pop-up modal prompt tells the user to type
-in some details elaborating on what they just clicked]
-
-  $('.surveyBtn').click(function(e) {
-    // wow, massive copy-and-paste action from above!
-    var myArgs = getAppState();
-
-    var buttonPrompt = $(this).html();
-    var res = prompt('"' + buttonPrompt + '"' + '\nPlease elaborate if you can and hit OK to submit:');
-    // don't do ajax call when Cancel button is pressed
-    // (note that if OK button is pressed with no response, then an
-    // empty string will still be sent to the server
-    if (res !== null) {
-      myArgs.surveyQuestion = buttonPrompt;
-      myArgs.surveyResponse = res;
-      $.get('survey.py', myArgs, function(dat) {});
-    }
-  });
-
-  */
-
-  /* Version 2 - greatly simplified and deployed on 2014-05-24, revoked on 2014-07-13
-
-Hard-coded HTML in surveyHeader:
-
-<div id="surveyHeader" style="display: none;">
-  <div id="vizSurveyLabel" style="font-size: 8pt; color: #666; margin-bottom: 5pt;">
-    <!-- 2014-06-04 tagline -->
-    Support our research and help future learners by describing what you are learning.
-
-    <!-- 2014-05-28 tagline
-    Help future learners by describing what you just learned.
-    -->
-
-    <!-- 2014-05-25 tagline
-    Help future learners by writing about what you are learning.
-    Submit as often as you like!
-    -->
-
-    <!-- 2014-05-24 original tagline
-    Help future learners by filling in this blank whenever you learn
-    something new from the visualization:
-     -->
-  </div>
-  <div style="font-size: 10pt; margin-bottom: 5pt; padding: 1pt;">
-    <!-- this phrasing retired on 2014-06-04: "I just learned that" -->
-    What did you just learn?
-    <input style="font-size: 10pt; padding: 1pt;" type="text" id="iJustLearnedInput" size="60" maxlength=300/>
-
-    <button id="iJustLearnedSubmission" type="button" style="font-size: 10pt;">Submit</button>
-
-    <span id="iJustLearnedThanks"
-          style="color: #e93f34; font-weight: bold; font-size: 11pt; display: none;">
-      Thanks!
-    </span>
-  </div>
-</div>
-
-[when the user clicks the "Submit" button, send results to survey.py and
-display a brief "Thanks!" note]
-
-  $('#iJustLearnedSubmission').click(function(e) {
-    var resp = $("#iJustLearnedInput").val();
-
-    if (!$.trim(resp)) {
-      return;
-    }
-
-    // wow, massive copy-and-paste action from above!
-    var myArgs = getAppState();
-
-    // myArgs.surveyQuestion = "I just learned that ..."; // retired on 2014-06-04
-    myArgs.surveyQuestion = "What did you just learn?";
-    myArgs.surveyResponse = resp;
-    myArgs.surveyVersion = 'v2';
-
-    // 2014-05-25: implemented more detailed tracing for surveys
-    if (myVisualizer) {
-      myArgs.updateHistoryJSON = JSON.stringify(myVisualizer.updateHistory);
-    }
-
-    $.get('survey.py', myArgs, function(dat) {});
-
-    $("#iJustLearnedInput").val('');
-    $("#iJustLearnedThanks").show();
-    $.doTimeout('iJustLearnedThanksFadeOut', 1200, function() {
-      $("#iJustLearnedThanks").fadeOut(1000);
-    });
-  });
-
-  */
-
-  /* Version 3 - deployed on 2014-07-13, revoked on 2015-03-01 (revoked
-     along with v4 of the "Visualize Execution" survey)
-
-  Display one of 3 display-mode surveys, depending on the contents of
-  myVisualizer.backendOptionsObj.survey.testing_group
-
-  'a' / 'b' -- A/B testing of two kinds of surveys
-
-  'c' -- if the user has filled in an answer to 'What do you hope to
-  learn by visualizing this code?' when hitting "Visualize Execution",
-  then echo that phrase back to them and display a custom survey
-
-  if (!myVisualizer || !myVisualizer.backendOptionsObj.survey) {
-    return;
-  }
-
-  var surveyObj = myVisualizer.backendOptionsObj.survey;
-
-  var display_mode_survey_v3a = '\n\
-      <div id="vizSurveyLabel">\n\
-      Support our research by clicking a button whenever you learn something.<br/>\n\
-      </div>\n\
-      <div>\n\
-        <button class="surveyBtn" type="button">I learned something new!</button>\n\
-        <button class="surveyBtn" type="button">I found a bug in my code!</button>\n\
-        <button class="surveyBtn" type="button">I cleared up a misunderstanding!</button>\n\
-      </div>\n\
-    </div>\n';
-
-  var display_mode_survey_v3b = '\n\
-      <div id="vizSurveyLabel">\n\
-        Support our research and help future learners by describing what you are learning.\n\
-      </div>\n\
-      <div style="font-size: 10pt; margin-bottom: 5pt; padding: 1pt;">\n\
-        What did you just learn?\n\
-        <input style="font-size: 10pt; padding: 1pt;" type="text" id="iJustLearnedInput" size="60" maxlength=300/>\n\
-        <button id="iJustLearnedSubmission" type="button" style="font-size: 10pt;">Submit</button>\n\
-        <span id="iJustLearnedThanks"\n\
-              style="color: #e93f34; font-weight: bold; font-size: 11pt; display: none;">\n\
-          Thanks!\n\
-        </span>\n\
-      </div>';
-
-  var display_mode_survey_v3c = '\n\
-      <div id="vizSurveyLabel">\n\
-      Support our research by clicking a button whenever you learn something.<br/>\n\
-      </div>\n\
-      <div style="margin-top: 12px;">\n\
-        You hoped to learn:\n\
-        "<span id="userHopeLearn"></span>"<br/>\n\
-        <button class="surveyBtn" type="button">I just learned something about that topic!</button>\n\
-        <button class="surveyBtn" type="button">I just learned something else new!</button>\n\
-      </div>\n\
-    </div>\n';
-
-  var testingGroup = surveyObj.testing_group;
-
-  var display_mode_survey_HTML = '';
-  if (testingGroup == 'a') {
-    display_mode_survey_HTML = display_mode_survey_v3a;
-  } else if (testingGroup == 'b') {
-    display_mode_survey_HTML = display_mode_survey_v3b;
-  } else if (testingGroup == 'c') {
-    display_mode_survey_HTML = display_mode_survey_v3c;
-  } else {
-    assert(false);
-  }
-
-  $("#surveyHeader").html(display_mode_survey_HTML);
-
-  $("#vizSurveyLabel").css('font-size', '8pt')
-                      .css('color', '#666')
-                      .css('margin-bottom', '5pt');
-  $(".surveyBtn").css('margin-right', '6px');
-
-  if (testingGroup == 'c') {
-    $("#userHopeLearn").html(htmlspecialchars(surveyObj.what_learn_Q));
-  }
-
-
-  // testingGroup == 'a' || testingGroup == 'c'
-  // use unbind first so that this function is idempotent
-  $('.surveyBtn').unbind().click(function(e) {
-    var buttonPrompt = $(this).html();
-    var res = prompt('You said, "' + buttonPrompt + '"' + '\nPlease describe what you just learned:');
-
-    if (!$.trim(res)) {
-      return;
-    }
-
-    var myArgs = getAppState();
-    myArgs.surveyQuestion = buttonPrompt;
-    myArgs.surveyResponse = res;
-    myArgs.surveyVersion = 'v3';
-    myArgs.testing_group = testingGroup; // use underscore for consistency
-
-    myArgs.updateHistoryJSON = JSON.stringify(myVisualizer.updateHistory);
-
-    if (surveyObj.what_learn_Q) {
-      myArgs.what_learn_Q = surveyObj.what_learn_Q;
-    }
-
-    if (supports_html5_storage()) {
-      myArgs.user_uuid = localStorage.getItem('opt_uuid');
-    }
-
-    $.get('survey.py', myArgs, function(dat) {});
-
-    logEvent({type: 'survey',
-              appState: getAppState(),
-              surveyQuestion: myArgs.surveyQuestion,
-              surveyResponse: myArgs.surveyResponse,
-              surveyVersion: myArgs.surveyVersion,
-              testing_group: myArgs.testing_group,
-              what_learn_Q: myArgs.what_learn_Q,
-              });
-  });
-
-  // testingGroup == 'b'
-  // use unbind first so that this function is idempotent
-  $('#iJustLearnedSubmission').unbind().click(function(e) {
-    var resp = $("#iJustLearnedInput").val();
-
-    if (!$.trim(resp)) {
-      return;
-    }
-
-    var myArgs = getAppState();
-    myArgs.surveyQuestion = "What did you just learn?";
-    myArgs.surveyResponse = resp;
-    myArgs.surveyVersion = 'v3';
-    myArgs.testing_group = testingGroup; // use underscore for consistency
-
-    myArgs.updateHistoryJSON = JSON.stringify(myVisualizer.updateHistory);
-
-    if (supports_html5_storage()) {
-      myArgs.user_uuid = localStorage.getItem('opt_uuid');
-    }
-
-    $.get('survey.py', myArgs, function(dat) {});
-
-
-    $("#iJustLearnedInput").val('');
-    $("#iJustLearnedThanks").show();
-    $.doTimeout('iJustLearnedThanksFadeOut', 1200, function() {
-      $("#iJustLearnedThanks").fadeOut(1000);
-    });
-
-    logEvent({type: 'survey',
-              appState: getAppState(),
-              surveyQuestion: myArgs.surveyQuestion,
-              surveyResponse: myArgs.surveyResponse,
-              surveyVersion: myArgs.surveyVersion,
-              testing_group: myArgs.testing_group,
-              });
-  });
-  */
-}
+// function initializeDisplayModeSurvey() {
+// }
 
 
 // using socket.io:
