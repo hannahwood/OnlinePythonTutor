@@ -48,79 +48,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 var originFrontendJsFile = 'opt-frontend.js';
 
-// // for OPT live chat tutoring interface
-// var tutorRequested = false;
-// var helpQueueSize = 0;
-// var tutorAvailable = false;
-// var tutorWaitText = 'Please wait for the next available tutor.';
-
-// var activateSyntaxErrorSurvey = true; // true;
-
-// function setHelpQueueSizeLabel() {
-//   if (helpQueueSize == 1) {
-//     $("#helpQueueText").html('There is 1 person in line.');
-//   }
-//   else if (helpQueueSize == 0 || helpQueueSize > 1) {
-//     $("#helpQueueText").html('There are ' + helpQueueSize + ' people in line.');
-//   }
-// }
-
-// function requestTutor() {
-//   $("#getTutorBtn,#ssDiv,#surveyHeader").hide(); // hide ASAP!
-//   $("#togetherjsStatus").html("Please wait ... requesting a tutor");
-//   tutorRequested = true;
-//   TogetherJS();
-// }
-
-// function startSharedSession() { // override default
-//   $("#getTutorBtn,#ssDiv,#surveyHeader").hide(); // hide ASAP!
-//   $("#adHeader").hide(); // hide ASAP!
-//   $("#togetherjsStatus").html("Please wait ... loading shared session");
-//   tutorRequested = false;
-//   TogetherJS();
-// }
-
-
-// function TogetherjsReadyHandler() {
-//   $("#getTutorBtn,#surveyHeader").hide();
-
-//   if (tutorRequested) {
-//     $.get(TogetherJSConfig_hubBase + 'request-help',
-//           {url: TogetherJS.shareUrl(), id: TogetherJS.shareId()},
-//           null /* don't use a callback; rely on SSE */);
-
-//     $("#togetherjsStatus").html('<div style="font-size: 11pt; margin-bottom: 5pt;">\
-//                                  Please wait for the next available tutor. \
-//                                  <span id="helpQueueText"></span></div>');
-//     setHelpQueueSizeLabel(); // run after creating span#helpQueueText
-//   }
-//   else {
-//     populateTogetherJsShareUrl();
-//   }
-// }
-
-// function TogetherjsCloseHandler() {
-//   if (tutorAvailable) {
-//     $("#getTutorBtn").show();
-//   }
-
-//   if (appMode == "display") {
-//     $("#surveyHeader").show();
-//   }
-// }
-
 function getBaseBackendOptionsObj() {
   var ret = {cumulative_mode: ($('#cumulativeModeSelector').val() == 'true'),
              heap_primitives: ($('#heapPrimitivesSelector').val() == 'true'),
              show_only_outputs: false,
              py_crazy_mode: ($('#pythonVersionSelector').val() == '2crazy'),
              origin: originFrontendJsFile};
-
-  // var surveyObj = getSurveyObject();
-  // if (surveyObj) {
-  //   ret.survey = surveyObj;
-  // }
-
   return ret;
 }
 

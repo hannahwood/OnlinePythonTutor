@@ -283,50 +283,15 @@ function genericOptFrontendReady() {
     }
     // otherwise just do an incremental update
     else {
+
+      // TWO STATES: edit and display (using jQuery's forward back plugin)
       var newMode = $.bbq.getState('mode');
-      //console.log('hashchange:', newMode, window.location.hash);
-      updateAppDisplay(newMode);
+      // console.log('hashchange:', newMode, window.location.hash);
+      // updateAppDisplay(newMode);
     }
   });
 
-
-  if (useCodeMirror) {
-    pyInputCodeMirror = CodeMirror(document.getElementById('codeInputPane'), {
-      mode: 'python',
-      lineNumbers: true,
-      tabSize: 4,
-      indentUnit: 4,
-      // convert tab into four spaces:
-      extraKeys: {Tab: function(cm) {cm.replaceSelection("    ", "end");}}
-    });
-
-    pyInputCodeMirror.setSize(null, '420px');
-  }
-  else {
-    initAceEditor(420);
-  }
-
-
-  if (useCodeMirror) {
-    // for shared sessions
-    pyInputCodeMirror.on("change", function(cm, change) {
-      // only trigger when the user explicitly typed something
-      if (change.origin != 'setValue') {
-        if (TogetherJS.running) {
-          TogetherJS.send({type: "codemirror-edit"});
-        }
-      }
-    });
-  }
-  else {
-    pyInputAceEditor.getSession().on("change", function(e) {
-      // unfortunately, Ace doesn't detect whether a change was caused
-      // by a setValue call
-      if (TogetherJS.running) {
-        TogetherJS.send({type: "codemirror-edit"});
-      }
-    });
-  }
+  initAceEditor(420);
 
   // first initialize options from HTML LocalStorage. very important
   // that this code runs first so that options get overridden by query
@@ -344,15 +309,15 @@ function genericOptFrontendReady() {
         lsOptions[k] = v;
       }
     });
-    setToggleOptions(lsOptions);
+    // setToggleOptions(lsOptions);
 
     // store in localStorage whenever user explicitly changes any toggle option:
-    $('#cumulativeModeSelector,#heapPrimitivesSelector,#textualMemoryLabelsSelector,#pythonVersionSelector').change(function() {
-      var ts = getToggleState();
-      $.each(ts, function(k, v) {
-        localStorage.setItem(k, v);
-      });
-    });
+    // $('#cumulativeModeSelector,#heapPrimitivesSelector,#textualMemoryLabelsSelector,#pythonVersionSelector').change(function() {
+    //   var ts = getToggleState();
+    //   $.each(ts, function(k, v) {
+    //     localStorage.setItem(k, v);
+    //   });
+    // });
 
     // generate a unique UUID per "user" (as indicated by a single browser
     // instance on a user's machine, which can be more precise than IP
@@ -379,9 +344,9 @@ function genericOptFrontendReady() {
   // register a generic AJAX error handler
   $(document).ajaxError(function(evt, jqxhr, settings, exception) {
     // ignore errors related to togetherjs stuff:
-    if (settings.url.indexOf('togetherjs') > -1) {
-      return; // get out early
-    }
+    // if (settings.url.indexOf('togetherjs') > -1) {
+    //   return; // get out early
+    // }
 
     // ugh other idiosyncratic stuff
     if (settings.url.indexOf('name_lookup.py') > -1) {
@@ -652,9 +617,9 @@ function updateAppDisplay(newAppMode) {
     $("#pyOutputPane").show();
     $("#embedLinkDiv").show();
 
-    if (typeof TogetherJS === 'undefined' || !TogetherJS.running) {
-      $("#surveyHeader").show();
-    }
+    // if (typeof TogetherJS === 'undefined' || !TogetherJS.running) {
+    //   $("#surveyHeader").show();
+    // }
 
     doneExecutingCode();
 
@@ -685,13 +650,13 @@ function updateAppDisplay(newAppMode) {
       // debounce
       $.doTimeout('pyCodeOutputDivScroll', 100, function() {
         // note that this will send a signal back and forth both ways
-        if (typeof TogetherJS !== 'undefined' && TogetherJS.running) {
-          // (there's no easy way to prevent this), but it shouldn't keep
-          // bouncing back and forth indefinitely since no the second signal
-          // causes no additional scrolling
-          TogetherJS.send({type: "pyCodeOutputDivScroll",
-                           scrollTop: elt.scrollTop()});
-        }
+        // if (typeof TogetherJS !== 'undefined' && TogetherJS.running) {
+        //   // (there's no easy way to prevent this), but it shouldn't keep
+        //   // bouncing back and forth indefinitely since no the second signal
+        //   // causes no additional scrolling
+        //   TogetherJS.send({type: "pyCodeOutputDivScroll",
+        //                    scrollTop: elt.scrollTop()});
+        // }
       });
     });
 
@@ -817,6 +782,7 @@ function optFinishSuccessfulExecution() {
 
 
 // TODO: cut reliance on the nasty rawInputLst global
+// HANNAH: THIS IS THE BIG FUNCTION
 function executeCodeAndCreateViz(codeToExec,
                                  backendScript, backendOptionsObj,
                                  frontendOptionsObj,
@@ -866,14 +832,9 @@ function executeCodeAndCreateViz(codeToExec,
           myVisualizer = new HolisticVisualizer(outputDiv, dataFromBackend, frontendOptionsObj);
         } else {
           myVisualizer = new ExecutionVisualizer(outputDiv, dataFromBackend, frontendOptionsObj);
+          console.log(myVisualizer);
 
           myVisualizer.add_pytutor_hook("end_updateOutput", function(args) {
-            // if (updateOutputSignalFromRemote) {
-            //   return;
-            // }
-            if (typeof TogetherJS !== 'undefined' && TogetherJS.running && !isExecutingCode) {
-              TogetherJS.send({type: "updateOutput", step: args.myViz.curInstr});
-            }
 
             // debounce to compress a bit ... 250ms feels "right"
             $.doTimeout('updateOutputLogEvent', 250, function() {
@@ -934,30 +895,10 @@ function executeCodeAndCreateViz(codeToExec,
         }
 
         handleSuccessFunc();
-
-        // VERY SUBTLE -- reinitialize TogetherJS so that it can detect
-        // and sync any new elements that are now inside myVisualizer
-        if (typeof TogetherJS !== 'undefined' && TogetherJS.running) {
-          TogetherJS.reinitialize();
-        }
       }
 
       doneExecutingCode(); // rain or shine, we're done executing!
       // run this at the VERY END after all the dust has settled
-
-      // do logging at the VERY END after the dust settles ...
-      // and don't do it for iframe-embed.js since getAppState doesn't
-      // work in that case ...
-      // if (originFrontendJsFile !== 'iframe-embed.js') {
-      //   logEvent({type: 'doneExecutingCode',
-      //             appState: getAppState(),
-      //             // enough to reconstruct the ExecutionVisualizer object
-      //             backendDataJSON: JSON.stringify(dataFromBackend), // for easier transport and compression
-      //             frontendOptionsObj: frontendOptionsObj,
-      //             backendOptionsObj: backendOptionsObj,
-      //             killerException: killerException, // if there's, say, a syntax error
-      //             });
-      // }
 
       if (killerException) {
         var excObj = {killerException: killerException, myAppState: getAppState()};
@@ -975,14 +916,6 @@ function executeCodeAndCreateViz(codeToExec,
                        "Report a bug to philip@pgbovine.net by clicking on the 'Generate URL'",
                        "button at the bottom and including a URL in your email."]);
       return;
-    }
-
-    if (typeof TogetherJS !== 'undefined' &&
-        TogetherJS.running && !executeCodeSignalFromRemote) {
-      TogetherJS.send({type: "executeCode",
-                       myAppState: getAppState(),
-                       forceStartingInstr: frontendOptionsObj.startingInstruction,
-                       rawInputLst: rawInputLst});
     }
 
     snapshotCodeDiff(); // do ONE MORE snapshot before we execute, or else
@@ -1003,34 +936,10 @@ function executeCodeAndCreateViz(codeToExec,
     jsonp_endpoint = null;
 
     // hacky!
-    // if (backendScript === python2_backend_script) {
-    //   frontendOptionsObj.lang = 'py2';
-    // } else if (backendScript === python3_backend_script) {
-    //   frontendOptionsObj.lang = 'py3';
-    // } else 
+
     if (backendScript === js_backend_script) {
       frontendOptionsObj.lang = 'js';
       jsonp_endpoint = JS_JSONP_ENDPOINT;
-    } 
-    // else if (backendScript === ts_backend_script) {
-    //   frontendOptionsObj.lang = 'ts';
-    //   jsonp_endpoint = TS_JSONP_ENDPOINT;
-    // } else if (backendScript === ruby_backend_script) {
-    //   frontendOptionsObj.lang = 'ruby';
-    //   jsonp_endpoint = RUBY_JSONP_ENDPOINT;
-    // } else if (backendScript === java_backend_script) {
-    //   frontendOptionsObj.lang = 'java';
-    //   frontendOptionsObj.disableHeapNesting = true; // never nest Java objects, seems like a good default
-    //   jsonp_endpoint = JAVA_JSONP_ENDPOINT;
-    // }
-
-    if (backendScript === js_backend_script 
-      // ||
-      //   backendScript === ts_backend_script ||
-      //   backendScript === java_backend_script ||
-      //   backendScript === ruby_backend_script
-        ) {
-      // hack! should just be a dummy script for logging only
       $.get(backendScript,
             {user_script : codeToExec,
              options_json: JSON.stringify(backendOptionsObj),
@@ -1050,21 +959,9 @@ function executeCodeAndCreateViz(codeToExec,
         dataType: "jsonp",
         data: {user_script : codeToExec,
                options_json: JSON.stringify(backendOptionsObj)},
-        success: execCallback,
+        success: execCallback
       });
-    } else {
-      // Python 2 or 3
-      $.get(backendScript,
-            {user_script : codeToExec,
-             raw_input_json: rawInputLst.length > 0 ? JSON.stringify(rawInputLst) : '',
-             options_json: JSON.stringify(backendOptionsObj),
-             user_uuid: supports_html5_storage() ? localStorage.getItem('opt_uuid') : undefined,
-             session_uuid: sessionUUID,
-             // if we don't have any deltas, then don't bother sending deltaObj:
-             diffs_json: deltaObj && (deltaObj.deltas.length > 0) ? JSON.stringify(deltaObj) : null},
-             execCallback, "json");
     }
-
     initDeltaObj(); // clear deltaObj to start counting over again
 }
 
@@ -1129,58 +1026,3 @@ function getSurveyObject() {
   return null;
 }
 
-
-// survey for shared sessions, deployed on 2014-06-06, taken down on
-// 2015-03-06 due to lack of useful responses
-// var postSessionSurvey = '\n\
-// <div id="postSessionSurveyDiv" style="border: 1px solid #BE554E; padding: 5px; margin-top: 5px; line-height: 175%;">\n\
-// <span style="font-size: 8pt; color: #666;">Support our research by giving anonymous feedback before ending your session.</span><br/>\n\
-// How useful was this particular session? (click star to rate)\n\
-// <span class="star-rating togetherjsIgnore">\n\
-//   <input type="radio" class="togetherjsIgnore" name="rating" value="1"/><i></i>\n\
-//   <input type="radio" class="togetherjsIgnore" name="rating" value="2"/><i></i>\n\
-//   <input type="radio" class="togetherjsIgnore" name="rating" value="3"/><i></i>\n\
-//   <input type="radio" class="togetherjsIgnore" name="rating" value="4"/><i></i>\n\
-//   <input type="radio" class="togetherjsIgnore" name="rating" value="5"/><i></i>\n\
-// </span>\n\
-// <br/>\
-// What did you just learn? <input type="text" id="sharedSessionWhatLearned" class="surveyQ togetherjsIgnore" size=60 maxlength=140/>\n\
-// <button id="submitSessionSurveyBtn" type="button" style="font-size: 8pt;">Submit</button>\n\
-// <span id="sharedSessionWhatLearnedThanks" style="color: #e93f34; font-weight: bold; font-size: 10pt; display: none;">Thanks!</span>\n\
-// </div>'
-
-// deployed on 2015-03-06
-// var emailNotificationHtml = '<div style="border: 2px solid #BE554E; padding: 5px; margin-top: 15px; margin-bottom: 15px; line-height: 150%; font-size: 10pt; width: 600px;">If you enjoyed using this <em>shared sessions</em> feature, please take a minute to fill out a <a href="https://docs.google.com/forms/d/126ZijTGux_peoDusn1F9C1prkR226897DQ0MTTB5Q4M/viewform" target="_blank"><b>three-question survey</b></a> to help our research. Thank you!</div>'
-
-// display-mode survey, which is shown when the user is in 'display' mode
-// As of Version 3, this runs every time code is executed, so make sure event
-// handlers don't unnecessarily stack up
-// function initializeDisplayModeSurvey() {
-// }
-
-
-// // using socket.io:
-// function logEvent(obj) {
-//   //console.log(obj);
-//   if (loggingSocketIO) {
-//     if (supports_html5_storage()) {
-//       obj.user_uuid = localStorage.getItem('opt_uuid');
-//     }
-//     // this probably won't match the server time due to time zones, etc.
-//     obj.clientTime = new Date().getTime();
-
-//     if (loggingSocketIO.connected) {
-//       loggingSocketIO.emit('opt-client-event', obj);
-//       //console.log('emitted opt-client-event:', obj);
-//     } else {
-//       // TODO: be careful about this getting HUGE if loggingSocketIO
-//       // never connects properly ...
-//       logEventQueue.push(obj); // queue this up to be logged when the client
-//                                // finishes successfully connecting to the server
-
-//       // we're not yet connected, or we've been disconnected by the
-//       // server, so try to connect/reconnect first before emitting the event
-//       loggingSocketIO.connect(); // will trigger the .on('connect', ...) handler
-//     }
-//   }
-// }
