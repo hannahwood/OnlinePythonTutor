@@ -92,7 +92,7 @@ var curVisualizerID = 1; // global to uniquely identify each ExecutionVisualizer
 //                          whenever the HEIGHT of #dataViz changes
 //   verticalStack - if true, then stack code display ON TOP of visualization
 //                   (else place side-by-side)
-//   visualizerIdOverride - override visualizer ID instead of auto-assigning it
+//   DELETEvisualizerIdOverride - override visualizer ID instead of auto-assigning it
 //                          (BE CAREFUL ABOUT NOT HAVING DUPLICATE IDs ON THE SAME PAGE,
 //                           OR ELSE ARROWS AND OTHER STUFF WILL GO HAYWIRE!)
 //   executeCodeWithRawInputFunc - function to call when you want to re-execute the given program
@@ -111,7 +111,7 @@ var curVisualizerID = 1; // global to uniquely identify each ExecutionVisualizer
 //          [default is Python-style labels]
 //   ^^debugMode - some extra debugging printouts
 function ExecutionVisualizer(domRootID, dat, params) {
-  debugger;
+
     this.curInputCode = dat.code.rtrim(); // kill trailing spaces
     this.curTrace = dat.trace;
 
@@ -133,13 +133,14 @@ function ExecutionVisualizer(domRootID, dat, params) {
 
     this.curInstr = 0;
 
-    this.params = params;
-    if (!this.params) {
+    // if (!params) {
         this.params = {}; // make it an empty object by default
-    }
+    // } else {
+    //     this.params = params;
+    // }
 
-    var arrowLinesDef = (this.params.arrowLines !== undefined);
-    var highlightLinesDef = (this.params.highlightLines !== undefined);
+    var arrowLinesDef = (this.params.arrowLines !== undefined); // true if exists
+    var highlightLinesDef = (this.params.highlightLines !== undefined); // true if exists
 
     if (!arrowLinesDef && !highlightLinesDef) {
         // neither is set
@@ -155,6 +156,8 @@ function ExecutionVisualizer(domRootID, dat, params) {
         this.params.arrowLines = !(this.params.highlightLines);
     }
 
+
+//maybe delete??
     this.compactFuncLabels = this.params.compactFuncLabels;
 
     if (this.params.visualizerIdOverride) {
@@ -359,6 +362,7 @@ ExecutionVisualizer.prototype.generateHeapObjID = function(objID, stepNum) {
 
 
 ExecutionVisualizer.prototype.render = function() {
+  debugger;
     if (this.hasRendered) {
         alert('ERROR: You should only call render() ONCE on an ExecutionVisualizer object.');
         return;
@@ -478,7 +482,8 @@ ExecutionVisualizer.prototype.render = function() {
         this.domRoot.find('#editCodeLinkDiv').hide(); // just hide for simplicity!
         this.domRoot.find('#editBtn').attr('href', "#");
         this.domRoot.find('#editBtn').click(function() {
-            return false; }); // DISABLE the link!
+            return false;
+        }); // DISABLE the link!
     }
 
     if (this.params.lang !== undefined) {
@@ -795,7 +800,8 @@ ExecutionVisualizer.prototype.renderPyCodeOutput = function() {
             ret.push(Number(k)); // these should be NUMBERS, not strings
         });
         ret.sort(function(x, y) {
-            return x - y }); // WTF, javascript sort is lexicographic by default!
+            return x - y
+        }); // WTF, javascript sort is lexicographic by default!
         return ret;
     }
 
@@ -877,7 +883,8 @@ ExecutionVisualizer.prototype.renderPyCodeOutput = function() {
         .enter().append('tr')
         .selectAll('td')
         .data(function(d, i) {
-            return [d, d] /* map full data item down both columns */ ; })
+            return [d, d] /* map full data item down both columns */ ;
+        })
         .enter().append('td')
         .attr('class', function(d, i) {
             if (i == 0) {
@@ -1221,7 +1228,7 @@ ExecutionVisualizer.prototype.updateOutputFull = function(smoothTransition) {
 
             curLineNumber = curEntry.line;
 
-           
+
 
             // on 'return' events, give a bit more of a vertical nudge to show that
             // the arrow is aligned with the 'bottom' of the line ...
@@ -1733,7 +1740,8 @@ ExecutionVisualizer.prototype.precomputeCurTraceLayouts = function() {
 
         // now remove empty rows (i.e., those with only a row ID tag) from curLayout
         curLayout = curLayout.filter(function(row) {
-            return row.length > 1 });
+            return row.length > 1
+        });
 
         myViz.curTraceLayouts.push(curLayout);
     });
@@ -1836,7 +1844,8 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
     var heapRows = myViz.domRootD3.select('#heap')
         .selectAll('table.heapRow')
         .attr('id', function(d, i) {
-            return 'heapRow' + i; }) // add unique ID
+            return 'heapRow' + i;
+        }) // add unique ID
         .data(curToplevelLayout, function(objLst) {
             return objLst[0]; // return first element, which is the row ID tag
         });
@@ -1846,7 +1855,8 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
     heapRows.enter().append('table')
         //.each(function(objLst, i) {console.log('NEW ROW:', objLst, i);})
         .attr('id', function(d, i) {
-            return 'heapRow' + i; }) // add unique ID
+            return 'heapRow' + i;
+        }) // add unique ID
         .attr('class', 'heapRow');
 
     // delete a heap row
@@ -1864,15 +1874,18 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
         //.each(function(objLst, i) { console.log('UPDATE ROW:', objLst, i); })
         .selectAll('td.toplevelHeapObject')
         .data(function(d, i) {
-                return d.slice(1, d.length); }, /* map over each row, skipping row ID tag */
+                return d.slice(1, d.length);
+            }, /* map over each row, skipping row ID tag */
             function(objID) {
-                return objID; } /* each object ID is unique for constancy */ );
+                return objID;
+            } /* each object ID is unique for constancy */ );
 
     // insert a new toplevelHeapObject
     var tlhEnter = toplevelHeapObjects.enter().append('td')
         .attr('class', 'toplevelHeapObject')
         .attr('id', function(d, i) {
-            return 'toplevel_heap_object_' + d; });
+            return 'toplevel_heap_object_' + d;
+        });
 
     // remember that the enter selection is added to the update
     // selection so that we can process it later ...
@@ -1957,7 +1970,8 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
         .selectAll('tr')
         .data(realGlobalsLst,
             function(d) {
-                return d; } // use variable name as key
+                return d;
+            } // use variable name as key
         );
 
     globalVarTable
@@ -1972,12 +1986,14 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
     var globalVarTableCells = globalVarTable
         .selectAll('td.stackFrameVar,td.stackFrameValue')
         .data(function(d, i) {
-            return [d, d]; }) /* map varname down both columns */
+            return [d, d];
+        }) /* map varname down both columns */
 
     globalVarTableCells.enter()
         .append('td')
         .attr('class', function(d, i) {
-            return (i == 0) ? 'stackFrameVar' : 'stackFrameValue'; });
+            return (i == 0) ? 'stackFrameVar' : 'stackFrameValue';
+        });
 
     // remember that the enter selection is added to the update
     // selection so that we can process it later ...
@@ -2079,13 +2095,15 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
     var sfdEnter = stackFrameDiv.enter()
         .append('div')
         .attr('class', function(d, i) {
-            return d.is_zombie ? 'zombieStackFrame' : 'stackFrame'; })
+            return d.is_zombie ? 'zombieStackFrame' : 'stackFrame';
+        })
         .attr('id', function(d, i) {
             return d.is_zombie ? myViz.generateID("zombie_stack" + i) : myViz.generateID("stack" + i);
         })
         // HTML5 custom data attributes
         .attr('data-frame_id', function(frame, i) {
-            return frame.frame_id; })
+            return frame.frame_id;
+        })
         .attr('data-parent_frame_id', function(frame, i) {
             return (frame.parent_frame_id_list.length > 0) ? frame.parent_frame_id_list[0] : null;
         })
@@ -2179,10 +2197,12 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
                 // TODO: look into whether we can use d3 parent nodes to avoid
                 // this hack ... http://bost.ocks.org/mike/nest/
                 return frame.ordered_varnames.map(function(varname) {
-                    return { varname: varname, frame: frame }; });
+                    return { varname: varname, frame: frame };
+                });
             },
             function(d) {
-                return d.varname; } // use variable name as key
+                return d.varname;
+            } // use variable name as key
         );
 
     stackVarTable
@@ -2197,12 +2217,14 @@ ExecutionVisualizer.prototype.renderDataStructures = function(curEntry, curTople
     var stackVarTableCells = stackVarTable
         .selectAll('td.stackFrameVar,td.stackFrameValue')
         .data(function(d, i) {
-            return [d, d] /* map identical data down both columns */ ; });
+            return [d, d] /* map identical data down both columns */ ;
+        });
 
     stackVarTableCells.enter()
         .append('td')
         .attr('class', function(d, i) {
-            return (i == 0) ? 'stackFrameVar' : 'stackFrameValue'; });
+            return (i == 0) ? 'stackFrameVar' : 'stackFrameValue';
+        });
 
     stackVarTableCells
         .order() // VERY IMPORTANT to put in the order corresponding to data elements
@@ -3093,4 +3115,3 @@ function getRefID(obj) {
     assert(obj[0] == 'REF');
     return obj[1];
 }
-
